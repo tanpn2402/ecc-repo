@@ -9,3 +9,8 @@ dist-ssr
 .cache
 server/dist
 public/dist
+
+apps/backend/data/*.db
+apps/backend/data/*.db-journal
+apps/backend/data/*.db-wal
+apps/backend/data/*.db-shm
