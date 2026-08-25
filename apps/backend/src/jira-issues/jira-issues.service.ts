@@ -344,7 +344,7 @@ export class JiraIssuesService extends EventEmitter {
    * it never required the issue to appear in the live JQL-filtered list —
    * so this works for any project, not just JIRA_PROJECT/"CORE").
    */
-  async addIssue(input: string): Promise<IssueDto> {
+  async addIssue({ input, group }: {input: string, group: string}): Promise<IssueDto> {
     const allowedHosts = new Set([
       new URL(this.config.mr.jiraBaseUrl).hostname,
     ]);
@@ -354,7 +354,7 @@ export class JiraIssuesService extends EventEmitter {
     } catch (err: any) {
       throw new BadRequestException(err.message);
     }
-    return this.syncIssue(issueKey);
+    return this.syncIssue(issueKey, { group });
   }
 
   private mapReview(row: JiraReviewRunRow): ReviewRunDto {

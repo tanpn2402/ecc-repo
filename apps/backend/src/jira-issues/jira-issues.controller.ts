@@ -35,9 +35,9 @@ export class JiraIssuesController {
    * two require a second literal segment.
    */
   @Post("add")
-  async add(@Body() body: { input?: string }) {
+  async add(@Body() body: { input?: string, group?: string }) {
     try {
-      return await this.service.addIssue(body?.input ?? "");
+      return await this.service.addIssue({ input: body?.input ?? "", group: body?.group ?? "" });
     } catch (err: any) {
       if (err instanceof HttpException) throw err;
       throw new HttpException({ error: err.message }, HttpStatus.BAD_GATEWAY);

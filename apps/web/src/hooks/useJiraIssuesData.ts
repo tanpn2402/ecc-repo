@@ -79,12 +79,20 @@ export function useJiraIssuesData() {
           }
         }
       } catch (err: any) {
-        if (mountedRef.current) setError(err.message || "Failed to load Jira issues");
+        if (mountedRef.current)
+          setError(err.message || "Failed to load Jira issues");
       } finally {
         if (mountedRef.current) setLoading(false);
       }
     },
-    [setAtlassian, setSynced, setAtlassianLoaded, setSyncedLoaded, setLoading, setError]
+    [
+      setAtlassian,
+      setSynced,
+      setAtlassianLoaded,
+      setSyncedLoaded,
+      setLoading,
+      setError,
+    ],
   );
 
   useEffect(() => {
@@ -114,7 +122,7 @@ export function useJiraIssuesData() {
         });
       }
     },
-    [load, setSyncedLoaded, setSyncingKeys, setError]
+    [load, setSyncedLoaded, setSyncingKeys, setError],
   );
 
   /** "Done" button on the Synced Issues table — removes the row locally rather than refetching the whole list. */
@@ -136,7 +144,7 @@ export function useJiraIssuesData() {
         });
       }
     },
-    [setSynced, setAtlassianLoaded, setRemovingKeys, setError]
+    [setSynced, setAtlassianLoaded, setRemovingKeys, setError],
   );
 
   return { refetch, sync, load, markDone, removingKeys };
@@ -162,14 +170,17 @@ export function useMrReviews(mrId: string | null) {
         setLoading(false);
       }
     },
-    [setCache, setLoading, setError]
+    [setCache, setLoading, setError],
   );
 
   useEffect(() => {
     if (mrId) load(mrId);
   }, [mrId, load]);
 
-  return { data: mrId ? cache[mrId] : undefined, reload: () => mrId && load(mrId) };
+  return {
+    data: mrId ? cache[mrId] : undefined,
+    reload: () => mrId && load(mrId),
+  };
 }
 
 /**
@@ -210,7 +221,10 @@ export function useIssueMrs() {
         setCache((prev) => ({ ...prev, [key]: mrs }));
         return mrs;
       } catch (err: any) {
-        setErrors((prev) => ({ ...prev, [key]: err.message || `Failed to load merge requests for ${key}` }));
+        setErrors((prev) => ({
+          ...prev,
+          [key]: err.message || `Failed to load merge requests for ${key}`,
+        }));
         return null;
       } finally {
         setLoadingKeys((s) => {
@@ -221,7 +235,7 @@ export function useIssueMrs() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cache, loadingKeys, setCache, setLoadingKeys, setErrors]
+    [cache, loadingKeys, setCache, setLoadingKeys, setErrors],
   );
 
   return { cache, loadingKeys, errors, reviewingIds, load };

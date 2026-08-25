@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button, Group, Space, Tabs, Title } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
+import { Group, Space, Tabs, Title } from '@mantine/core';
 
 export interface PageHeaderTab {
   value: string;
@@ -46,7 +45,8 @@ export function PageHeader({
         position: 'sticky',
         top: 'var(--app-shell-header-height)',
         backgroundColor: 'var(--mantine-color-dark-9)',
-        borderRadius: 'var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0'
+        borderRadius: 'var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0',
+        zIndex: 99,
       }}
     >
       <Title order={2} size="h3" style={{ flexShrink: 0 }}>

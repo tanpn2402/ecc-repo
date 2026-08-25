@@ -12,7 +12,7 @@ export interface MrReviews {
  */
 export async function fetchMrReviews(mrId: string): Promise<MrReviews> {
   const { data } = await apiClient.get<MrReviews>(
-    `/api/merge-requests/${encodeURIComponent(mrId)}/reviews`,
+    `/merge-requests/${encodeURIComponent(mrId)}/reviews`,
   );
 
   return data;
@@ -26,7 +26,7 @@ export async function triggerReview(
   workspace: string,
 ): Promise<ReviewRun> {
   const { data } = await apiClient.post<ReviewRun>(
-    `/api/merge-requests/${encodeURIComponent(mrId)}/review`,
+    `/merge-requests/${encodeURIComponent(mrId)}/review`,
     { workspace },
   );
 

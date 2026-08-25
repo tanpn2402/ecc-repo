@@ -9,7 +9,7 @@ import { apiClient } from "./client";
  */
 export async function fetchGitlabActivitiesMeta(): Promise<GitlabActivitiesMeta> {
   const { data } = await apiClient.get<GitlabActivitiesMeta>(
-    "/api/gitlab-activities/meta",
+    "/gitlab-activities/meta",
   );
 
   return data;
@@ -34,13 +34,11 @@ export async function fetchGitlabActivities({
   to,
 }: FetchGitlabActivitiesParams): Promise<GitlabActivity[]> {
   const { data } = await apiClient.get<GitlabActivity[]>(
-    "/api/gitlab-activities",
+    "/gitlab-activities",
     {
       params: {
         userIds: userIds.length ? userIds.join(",") : undefined,
-
         types: types.length ? types.join(",") : undefined,
-
         from,
         to,
       },

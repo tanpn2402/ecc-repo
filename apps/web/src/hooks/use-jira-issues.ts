@@ -19,11 +19,11 @@ export function useJiraIssues() {
   });
 }
 
-export function useIssueMrs(key: string, enabled = false) {
+export function useIssueMrs(key: string) {
   return useQuery({
     queryKey: ["jira", "issues", key, "mrs"],
     queryFn: () => fetchIssueMrs(key),
-    enabled: enabled && !!key,
+    enabled: !!key,
   });
 }
 

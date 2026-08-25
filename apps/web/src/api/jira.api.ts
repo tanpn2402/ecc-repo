@@ -12,6 +12,11 @@ export interface SyncIssueRequest {
   group: string;
 }
 
+export interface AddIssueRequest {
+  input: string;
+  group: string;
+}
+
 /**
  * GET /jira/issues
  *
@@ -62,9 +67,10 @@ export async function syncIssue({
  * Add/sync an issue from either a Jira issue key
  * or a full Jira issue URL.
  */
-export async function addIssue(input: string): Promise<Issue> {
+export async function addIssue({input, group}: AddIssueRequest): Promise<Issue> {
   const { data } = await apiClient.post<Issue>("/jira/issues/add", {
     input,
+    group
   });
 
   return data;
