@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   MantineReactTable,
   useMantineReactTable,
@@ -8,8 +8,12 @@ import { useGitlabActivities } from "@/hooks/use-gitlab-activities";
 import { GitlabActivity } from "@/types";
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
-import { Anchor } from "@mantine/core";
+import { Anchor, Button, Group, Text } from "@mantine/core";
 import { extractJiraId } from "@/utils/jira.utils";
+import { IconPlayerPlay } from "@tabler/icons-react";
+import { DateInput } from "@mantine/dates";
+import dayjs from "dayjs";
+import { ImportOpsModal } from "@/components/modals/ImportOpsModal";
 
 function formatDayName(date: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -17,12 +21,35 @@ function formatDayName(date: string) {
   }).format(new Date(`${date}T00:00:00`));
 }
 
+function getThisWeek() {
+  const today = dayjs();
+  const day = today.day();
+
+  const monday = today.subtract(day === 0 ? 6 : day - 1, "day");
+
+  return {
+    from: monday.format("YYYY-MM-DD"),
+    to: monday.add(6, "day").format("YYYY-MM-DD"),
+  };
+}
+
+function addDays(value: string, days: number): string {
+  return dayjs(value).add(days, "day").format("YYYY-MM-DD");
+}
+
 export function GitlabActivities() {
+  const thisWeek = getThisWeek();
+
+  const [fromDate, setFromDate] = useState<string | null>(thisWeek.from);
+  const [toDate, setToDate] = useState<string | null>(thisWeek.to);
+
+  const [importOpened, setImportOpened] = useState(false);
+
   const params = {
     userIds: [],
     types: [],
-    from: "2026-08-01",
-    to: "2026-08-26",
+    from: fromDate ? addDays(fromDate, -1) : "",
+    to: toDate ? addDays(toDate, 1) : "",
   };
 
   const { data = [], isLoading } = useGitlabActivities(params);
@@ -126,10 +153,58 @@ export function GitlabActivities() {
 
   return (
     <div>
-      <PageHeader title="GitLab Activities" filters={[]} />
+      <PageHeader
+        title="GitLab Activities"
+        filters={[
+          <Group key="from" gap="xs" wrap="nowrap">
+            <Text size="sm" fw={500}>
+              Start date
+            </Text>
+
+            <DateInput
+              value={fromDate}
+              onChange={setFromDate}
+              valueFormat="YYYY-MM-DD"
+              clearable={false}
+              size="sm"
+              w={140}
+            />
+          </Group>,
+
+          <Group key="to" gap="xs" wrap="nowrap">
+            <Text size="sm" fw={500}>
+              End date
+            </Text>
+
+            <DateInput
+              value={toDate}
+              onChange={setToDate}
+              valueFormat="YYYY-MM-DD"
+              clearable={false}
+              size="sm"
+              w={140}
+            />
+          </Group>,
+        ]}
+
+        actions={[
+          <Button
+            leftSection={<IconPlayerPlay size={16} />}
+            onClick={() => setImportOpened(true)}
+          >
+            Import OPS
+          </Button>,
+        ]}
+      />
       <PageContent>
         <MantineReactTable table={table} />
       </PageContent>
+
+      <ImportOpsModal
+        opened={importOpened}
+        onClose={() => setImportOpened(false)}
+        activities={data ?? []}
+      />
     </div>
   );
 }

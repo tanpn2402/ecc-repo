@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import "./style.css";
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import { AppLayout } from "./layouts/AppLayout";
 import { Issues } from "./pages/Issues";
 import { Dashboard } from "./pages/Dashboard";
