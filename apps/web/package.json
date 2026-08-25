@@ -10,12 +10,15 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@mantine/core": "^9.5.1",
+    "@mantine/dates": "^9.5.2",
     "@mantine/hooks": "^9.5.1",
     "@repo/ui": "*",
     "@tabler/icons-react": "^3.46.0",
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.19.0",
+    "dayjs": "^1.11.23",
     "jotai": "^2.20.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
