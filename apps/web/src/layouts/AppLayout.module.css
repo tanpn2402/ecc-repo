@@ -1,0 +1,13 @@
+.main {
+  padding-right: var(--mantine-spacing-md);
+  min-height: calc(100dvh - var(--app-shell-header-height));
+}
+
+.mainInner {
+  background-color: var(--mantine-color-dark-8);
+  border-top-left-radius: var(--mantine-radius-lg);
+  border-top-right-radius: var(--mantine-radius-lg);
+  min-height: inherit;
+  /* padding: var(--mantine-spacing-md);
+  padding-bottom: 0; */
+}

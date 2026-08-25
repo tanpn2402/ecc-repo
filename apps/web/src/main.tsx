@@ -1,25 +1,72 @@
 import { createRoot } from "react-dom/client";
 import "./style.css";
-import typescriptLogo from "/typescript.svg";
-import { Header, Counter } from "@repo/ui";
+import '@mantine/core/styles.css';
+import { AppLayout } from "./layouts/AppLayout";
+import { Issues } from "./pages/Issues";
+import { Dashboard } from "./pages/Dashboard";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { MantineProvider, createTheme, MantineColorsTuple } from '@mantine/core';
+import { NotFound } from "./pages/NotFound";
+import { createStore, Provider } from "jotai";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+
+const store = createStore();
+
+const queryClient = new QueryClient();
+
+
+const myColor: MantineColorsTuple = [
+  '#e6ffee',
+  '#d3f9e0',
+  '#a8f2c0',
+  '#7aea9f',
+  '#54e382',
+  '#3bdf70',
+  '#2bdd66',
+  '#1bc455',
+  '#0bae4a',
+  '#00973c'
+];
+
+const theme = createTheme({
+  colors: {
+    myColor,
+  },
+  primaryColor: 'myColor',
+});
+
+
+const router = createBrowserRouter([
+  {
+    element: <AppLayout />,
+    children: [
+      {
+        path: '/',
+        element: <Dashboard />,
+      },
+      {
+        path: '/issues',
+        element: <Issues />,
+      },
+      {
+        path: '*',
+        element: <NotFound />,
+      },
+    ],
+  },
+]);
 
 const App = () => (
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" className="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img
-        src={typescriptLogo}
-        className="logo vanilla"
-        alt="TypeScript logo"
-      />
-    </a>
-    <Header title="Web" />
-    <div className="card">
-      <Counter />
-    </div>
-  </div>
+  <MantineProvider theme={theme} defaultColorScheme="dark">
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
+    </QueryClientProvider>
+  </MantineProvider>
 );
 
 createRoot(document.getElementById("app")!).render(<App />);

@@ -1,0 +1,13 @@
+.pageHeader {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-dark-9);
+  border-top-left-radius: var(--mantine-radius-lg);
+  border-top-right-radius: var(--mantine-radius-lg);
+
+  position: sticky;
+  top: var(--app-shell-header-height);
+}
+
+.tabs :global(.mantine-Tabs-tab) {
+  height: 100%;
+}
