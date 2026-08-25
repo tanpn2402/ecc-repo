@@ -189,7 +189,7 @@ export class JiraIssuesRepository {
         .select()
         .from(jiraReviewRuns)
         .where(eq(jiraReviewRuns.gitlabUrl, gitlabUrl))
-        .orderBy(desc(jiraReviewRuns.completedAt), desc(jiraReviewRuns.id))
+        .orderBy(desc(jiraReviewRuns.id))
         .limit(1)
         .get() ?? null
     );
@@ -201,7 +201,19 @@ export class JiraIssuesRepository {
       .select()
       .from(jiraReviewRuns)
       .where(eq(jiraReviewRuns.gitlabUrl, gitlabUrl))
-      .orderBy(desc(jiraReviewRuns.completedAt), desc(jiraReviewRuns.id))
+      .orderBy(desc(jiraReviewRuns.id))
       .all();
+  }
+
+  getLatestCompletedReviewForUrl(gitlabUrl: string): JiraReviewRunRow | null {
+    return (
+      this.db
+        .select()
+        .from(jiraReviewRuns)
+        .where(eq(jiraReviewRuns.gitlabUrl, gitlabUrl))
+        .orderBy(desc(jiraReviewRuns.completedAt), desc(jiraReviewRuns.id))
+        .limit(1)
+        .get() ?? null
+    );
   }
 }

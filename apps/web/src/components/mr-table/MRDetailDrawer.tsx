@@ -1,7 +1,5 @@
 import {
   Anchor,
-  Badge,
-  Divider,
   Drawer,
   Group,
   Stack,
@@ -11,9 +9,10 @@ import {
 import type { MergeRequest } from "@/types";
 import { useMrReviews } from "@/hooks/use-merge-requests";
 
-import { ConsoleTab } from "./ConsoleTab";
+import { ConsoleTab } from "./MRConsoleTab";
 import { ReviewDetail } from "./ReviewDetail";
 import { MRReviewHistory } from "./MRReviewHistory";
+import MRStatusBadge from "./MRStatusBadge";
 
 type MRDetailDrawerProps = {
   mr: MergeRequest | null;
@@ -48,13 +47,10 @@ export function MRDetailDrawer({
     <Drawer
       opened={opened}
       onClose={onClose}
-      title="Merge Request"
-      position="right"
-      size="xl"
-    >
-      <Stack gap="md">
-        {/* Header */}
+      title={<>
         <Stack gap="xs">
+          <Text>Merge Request</Text>
+
           <Group gap="xs">
             <Text size="sm" c="dimmed">
               Jira:
@@ -96,12 +92,15 @@ export function MRDetailDrawer({
               State:
             </Text>
 
-            <Badge variant="light">{mr.status}</Badge>
+            <MRStatusBadge status={mr.status} />
           </Group>
         </Stack>
 
-        <Divider />
-
+      </>}
+      position="right"
+      size="xl"
+    >
+      <Stack gap="md">
         <Tabs defaultValue="console">
           <Tabs.List>
             <Tabs.Tab value="console">Console</Tabs.Tab>
@@ -110,7 +109,7 @@ export function MRDetailDrawer({
           </Tabs.List>
 
           <Tabs.Panel value="console" pt="md">
-            <ConsoleTab review={mrReviews.data?.latest ?? null} />
+            <ConsoleTab review={(mrReviews.data?.history ?? [])[0]} />
           </Tabs.Panel>
 
           <Tabs.Panel value="detail" pt="md">

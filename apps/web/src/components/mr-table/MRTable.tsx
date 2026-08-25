@@ -10,6 +10,7 @@ import { Anchor, Badge, Button, Center, Group, Text } from "@mantine/core";
 import { MRDetailDrawer } from "./MRDetailDrawer";
 import { MRReviewDialog } from "./MRReviewDialog";
 import { IconMenuDeep, IconPlayerPlay } from "@tabler/icons-react";
+import MRStatusBadge from "./MRStatusBadge";
 
 export type MRTableProps = {
   jiraKey: string;
@@ -59,25 +60,15 @@ export function MRTable({ jiraKey }: MRTableProps) {
       header: "Status",
       size: 140,
       Cell: ({ cell, row }) => {
-        const status = cell.getValue<string | null>();
+        const status = cell.getValue<string>();
         const gitlabState = row.getValue<string>("state");
 
         if (["merged"].includes(gitlabState)) {
-          return <Badge variant="default">MERGED</Badge>;
+          return <MRStatusBadge status='MERGED' />;
         }
 
         return (
-          <Badge
-            variant={
-              status === "PENDING"
-                ? "outline"
-                : status === "REVIEWING"
-                  ? "dot"
-                  : "filled"
-            }
-          >
-            {status}
-          </Badge>
+          <MRStatusBadge status={status} />
         );
       },
     },
@@ -97,9 +88,6 @@ export function MRTable({ jiraKey }: MRTableProps) {
       size: 260,
       sortingFn: undefined,
       Cell: ({ cell, row }) => {
-        const status = cell.getValue<string | null>();
-        const gitlabState = row.getValue<string>("state");
-
         return (
           <Group wrap="nowrap">
             <Button
@@ -183,6 +171,7 @@ export function MRTable({ jiraKey }: MRTableProps) {
 
       <MRReviewDialog
         mr={reviewMr}
+        jiraKey={jiraKey}
         opened={!!reviewMr}
         onClose={() => setReviewMr(null)}
       />

@@ -12,12 +12,13 @@ type ReviewForm = {
 };
 
 type MRReviewDialogProps = {
+  jiraKey: string;
   mr: MergeRequest | null;
   opened: boolean;
   onClose: () => void;
 };
 
-export function MRReviewDialog({ mr, opened, onClose }: MRReviewDialogProps) {
+export function MRReviewDialog({ jiraKey, mr, opened, onClose }: MRReviewDialogProps) {
   const { data: workspaces = [], isLoading } = useWorkspaces();
   const triggerReview = useTriggerReview();
 
@@ -50,6 +51,7 @@ export function MRReviewDialog({ mr, opened, onClose }: MRReviewDialogProps) {
       {
         mrId: mr.mrId,
         workspace: values.workspace,
+        jiraKey,
       },
       {
         onSuccess: onClose,

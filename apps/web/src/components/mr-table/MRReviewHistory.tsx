@@ -18,7 +18,7 @@ type ReviewHistoryProps = {
 };
 
 function ReviewStatus({ status }: { status: string }) {
-  return <Badge variant="light">{status}</Badge>;
+  return <Badge variant={status === "running" ? "dot" : "light"}>{status}</Badge>;
 }
 
 export function MRReviewHistory({ history }: ReviewHistoryProps) {
@@ -77,10 +77,10 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
     renderDetailPanel:
       history.length > 0
         ? ({ row }) => (
-            <Stack p="md">
-              <ReviewDetail review={row.original} />
-            </Stack>
-          )
+          <Stack p="md">
+            <ReviewDetail review={row.original} />
+          </Stack>
+        )
         : undefined,
 
     renderEmptyRowsFallback: () => (

@@ -7,6 +7,12 @@ export interface MrReviews {
   history: ReviewRun[];
 }
 
+export interface TriggerReviewRequest {
+  mrId: string;
+  workspace: string;
+  jiraKey: string;
+}
+
 /**
  * GET /api/merge-requests/:mrId/reviews
  */
@@ -21,13 +27,13 @@ export async function fetchMrReviews(mrId: string): Promise<MrReviews> {
 /**
  * POST /api/merge-requests/:mrId/review
  */
-export async function triggerReview(
-  mrId: string,
-  workspace: string,
-): Promise<ReviewRun> {
+export async function triggerReview({mrId, jiraKey, workspace}: TriggerReviewRequest): Promise<ReviewRun> {
   const { data } = await apiClient.post<ReviewRun>(
     `/merge-requests/${encodeURIComponent(mrId)}/review`,
-    { workspace },
+    {
+      workspace,
+      jiraKey,
+    },
   );
 
   return data;

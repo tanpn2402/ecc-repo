@@ -15,6 +15,7 @@ import { NotFound } from "./pages/NotFound";
 import { createStore, Provider } from "jotai";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GitlabActivities } from "./pages/GitlabActivities";
+import { useSocket } from "./hooks/use-socket";
 
 const store = createStore();
 
@@ -64,11 +65,16 @@ const router = createBrowserRouter([
   },
 ]);
 
+const Main = () => {
+  useSocket();
+  return <RouterProvider router={router} />;
+}
+
 const App = () => (
   <MantineProvider theme={theme} defaultColorScheme="dark">
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <Main />
       </Provider>
     </QueryClientProvider>
   </MantineProvider>

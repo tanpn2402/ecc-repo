@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Group, Space, Tabs, Title } from '@mantine/core';
+import React from 'react';
 
 export interface PageHeaderTab {
   value: string;
@@ -77,14 +78,16 @@ export function PageHeader({
       {filters.length > 0 && (
         <Group gap="sm" wrap="nowrap">
           {filters.map((filter, index) => (
-            <div key={index}>{filter}</div>
+            <React.Fragment key={index}>{filter}</React.Fragment>
           ))}
         </Group>
       )}
 
       {actions.length > 0 && (
         <Group gap="sm" ml="auto" wrap="nowrap">
-          {actions}
+          {actions.map((action, index) => (
+            <React.Fragment key={index}>{action}</React.Fragment>
+          ))}
         </Group>
       )}
     </Group>

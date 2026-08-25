@@ -19,12 +19,12 @@ export class JiraMrController {
 
   /** Body: { workspace: string } — one of GET /api/workspaces' `name` values, chosen via the "choose workspace" modal. */
   @Post(':mrId/review')
-  async review(@Param('mrId') mrId: string, @Body() body: { workspace?: string }) {
+  async review(@Param('mrId') mrId: string, @Body() body: { workspace?: string; jiraKey?: string }) {
     if (!body?.workspace) {
       throw new HttpException({ error: 'A workspace is required to start a review' }, HttpStatus.BAD_REQUEST);
     }
     try {
-      return await this.service.triggerReview(mrId, body.workspace);
+      return await this.service.triggerReview(mrId, body.workspace, body.jiraKey ?? "");
     } catch (err: any) {
       if (err instanceof HttpException) throw err;
       throw new HttpException({ error: err.message }, HttpStatus.INTERNAL_SERVER_ERROR);
