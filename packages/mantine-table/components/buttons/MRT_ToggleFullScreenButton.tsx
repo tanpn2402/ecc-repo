@@ -51,7 +51,7 @@ export const MRT_ToggleFullScreenButton = <TData extends MRT_RowData>({
         variant="subtle"
         {...rest}
       >
-        {isFullScreen ? <IconMinimize /> : <IconMaximize />}
+        {isFullScreen ? <IconMinimize size={24} /> : <IconMaximize size={20} />}
       </ActionIcon>
     </Tooltip>
   );

@@ -37,7 +37,7 @@ export const MRT_ToggleFiltersButton = <TData extends MRT_RowData>({
         variant="subtle"
         {...rest}
       >
-        {showColumnFilters ? <IconFilterOff /> : <IconFilter />}
+        {showColumnFilters ? <IconFilterOff size={20} /> : <IconFilter size={20} />}
       </ActionIcon>
     </Tooltip>
   );

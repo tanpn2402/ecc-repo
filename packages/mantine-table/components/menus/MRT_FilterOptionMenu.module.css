@@ -1,6 +1,9 @@
 .symbol {
-  font-size: var(--mantine-font-size-xl);
+  font-size: var(--mantine-font-size-lg);
   text-align: center;
   width: 2ch;
-  transform: translateY(-0.1em);
+  height: 0.8em;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }

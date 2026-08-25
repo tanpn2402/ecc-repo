@@ -112,7 +112,7 @@ const collapseRef = useRef<HTMLDivElement | null>(null);
                     size="md"
                     variant="subtle"
                   >
-                    <IconFilterCog />
+                    <IconFilterCog size={16} />
                   </ActionIcon>
                 </Menu.Target>
               </Tooltip>

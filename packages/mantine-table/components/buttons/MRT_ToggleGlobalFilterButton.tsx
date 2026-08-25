@@ -44,7 +44,7 @@ export const MRT_ToggleGlobalFilterButton = <TData extends MRT_RowData>({
         variant="subtle"
         {...rest}
       >
-        {showGlobalFilter ? <IconSearchOff /> : <IconSearch />}
+        {showGlobalFilter ? <IconSearchOff size={20} /> : <IconSearch size={20} />}
       </ActionIcon>
     </Tooltip>
   );

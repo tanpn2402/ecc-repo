@@ -53,11 +53,11 @@ export const MRT_ToggleDensePaddingButton = <TData extends MRT_RowData>({
         {...rest}
       >
         {density === 'xs' ? (
-          <IconBaselineDensitySmall />
+          <IconBaselineDensitySmall size={20} />
         ) : density === 'md' ? (
-          <IconBaselineDensityMedium />
+          <IconBaselineDensityMedium size={20} />
         ) : (
-          <IconBaselineDensityLarge />
+          <IconBaselineDensityLarge size={20} />
         )}
       </ActionIcon>
     </Tooltip>
