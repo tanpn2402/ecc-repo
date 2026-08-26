@@ -1,9 +1,5 @@
 export type MrStatus =
-  | "PENDING"
-  | "REVIEWING"
-  | "READY_TO_MERGE"
-  | "BLOCKED"
-  | "ERROR";
+  "PENDING" | "REVIEWING" | "READY_TO_MERGE" | "BLOCKED" | "ERROR";
 
 export interface MrSummary {
   id: string;
@@ -217,4 +213,17 @@ export interface ClaudeUsageLimit {
 export interface ClaudeUsage {
   fiveHour: ClaudeUsageLimit | null;
   sevenDay: ClaudeUsageLimit | null;
+}
+
+export interface OpsProject {
+  optId: string;
+  valueId: string;
+  name: string;
+}
+
+export interface OpsImportActivity extends GitlabActivity {
+  jiraId: string;
+  effort: number;
+  opsProjectValueId: string | null;
+  opsProjectOptId: string | null;
 }

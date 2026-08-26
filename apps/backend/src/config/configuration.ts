@@ -59,6 +59,9 @@ export interface AppConfig {
     users: { id: number; name: string }[];
     activityTypes: { key: string; label: string }[];
   };
+  ops: {
+    projects: { optId: string; valueId: string; name: string }[];
+  };
 }
 
 function parseAllowedUsers(raw: string | undefined): Set<number> {
@@ -199,6 +202,31 @@ function parseJiraGroups(
     });
 }
 
+function parseOpsGroups(
+  raw: string | undefined,
+): { optId: string; valueId: string; name: string }[] {
+  if (!raw) return [];
+  return String(raw)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const idx = entry.indexOf(':');
+      if (idx === -1) {
+        throw new Error(
+          `OPS_PROJECTS entry "${entry}" must be in "OptId:ValueId:Name" format`,
+        );
+      }
+      const [optId, valueId, name] = entry.split(':');
+      if (!name) {
+        throw new Error(
+          `OPS_PROJECTS entry "${entry}" is missing a display name`,
+        );
+      }
+      return { optId, valueId, name };
+    });
+}
+
 function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const botToken = env.TELEGRAM_BOT_TOKEN || '';
   const allowedUsers = parseAllowedUsers(env.TELEGRAM_ALLOWED_USERS);
@@ -275,6 +303,9 @@ function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       ).replace(/\/+$/, ''),
       users: parseGitlabActivityUsers(env.GITLAB_ACTIVITY_USERS),
       activityTypes: parseGitlabActivityTypes(env.GITLAB_ACTIVITY_TYPES),
+    },
+    ops: {
+      projects: parseOpsGroups(env.OPS_PROJECTS),
     },
   };
 }

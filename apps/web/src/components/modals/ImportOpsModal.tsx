@@ -7,19 +7,16 @@ import {
   type MRT_RowSelectionState,
 } from "@repo/mantine-table";
 
-import type { GitlabActivity } from "@/types";
+import type { GitlabActivity, OpsImportActivity, OpsProject } from "@/types";
 import { extractJiraId } from "@/utils/jira.utils";
 import { IconDatabaseImport } from "@tabler/icons-react";
+import { useOpsProjects } from "@/hooks/use-ops";
+import { getOpsScript } from "@/utils/ops.utils";
 
 interface ImportOpsModalProps {
   opened: boolean;
   onClose: () => void;
   activities: GitlabActivity[];
-}
-
-interface ImportActivity extends GitlabActivity {
-  jiraId: string;
-  effort: number;
 }
 
 const calculateEfforts = (count: number): number[] => {
@@ -45,6 +42,33 @@ export function ImportOpsModal({
   activities,
 }: ImportOpsModalProps) {
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
+  const [projectByJira, setProjectByJira] = useState<
+    Record<string, OpsProject | null>
+  >({});
+
+  const { data: opsProjects = [], isLoading: isProjectsLoading } =
+    useOpsProjects();
+
+  const opsProjectMap = useMemo(
+    () =>
+      opsProjects.reduce(
+        (result, project) => {
+          result[project.optId] = project;
+          return result;
+        },
+        {} as Record<string, OpsProject>,
+      ),
+    [opsProjects],
+  );
+
+  const opsProjectOptions = useMemo(
+    () =>
+      opsProjects.map((project) => ({
+        value: project.optId,
+        label: project.name,
+      })),
+    [opsProjects],
+  );
 
   const users = useMemo(() => {
     const map = new Map<number, string>();
@@ -73,27 +97,26 @@ export function ImportOpsModal({
     setRowSelection({});
   }, [opened, users]);
 
-  const data = useMemo<ImportActivity[]>(() => {
+  const data = useMemo<OpsImportActivity[]>(() => {
     const unique = new Map<string, GitlabActivity>();
 
     for (const activity of activities) {
       const jiraId = extractJiraId(activity.title);
 
-      if (!jiraId) {
-        continue;
-      }
-
       if (selectedUserId && String(activity.userId) !== selectedUserId) {
         continue;
       }
 
-      if (!unique.has(jiraId)) {
-        unique.set(jiraId, activity);
+      const key = `${activity.date}_${jiraId}`;
+
+      if (!unique.has(key)) {
+        unique.set(key, activity);
       }
     }
 
     const rows = Array.from(unique.values());
 
+    debugger;
     // Group Jira tasks by date
     const rowsByDate = new Map<string, GitlabActivity[]>();
 
@@ -105,7 +128,7 @@ export function ImportOpsModal({
     }
 
     // Calculate effort for each date
-    const result: ImportActivity[] = [];
+    const result: OpsImportActivity[] = [];
 
     for (const [, dateRows] of rowsByDate) {
       const efforts = calculateEfforts(dateRows.length);
@@ -117,6 +140,8 @@ export function ImportOpsModal({
           ...activity,
           jiraId,
           effort: efforts[index],
+          opsProjectValueId: opsProjects[0]?.valueId ?? null,
+          opsProjectOptId: opsProjects[0]?.optId ?? null,
         });
       });
     }
@@ -124,7 +149,25 @@ export function ImportOpsModal({
     return result;
   }, [activities, selectedUserId]);
 
-  const columns = useMemo<MRT_ColumnDef<ImportActivity>[]>(
+  useEffect(() => {
+    if (!opsProjects.length) {
+      return;
+    }
+
+    setProjectByJira((current) => {
+      const next = { ...current };
+
+      for (const row of data) {
+        if (!next[row.jiraId]) {
+          next[row.jiraId] = opsProjects[0];
+        }
+      }
+
+      return next;
+    });
+  }, [opsProjects, data]);
+
+  const columns = useMemo<MRT_ColumnDef<OpsImportActivity>[]>(
     () => [
       {
         accessorKey: "date",
@@ -140,6 +183,38 @@ export function ImportOpsModal({
         },
       },
       {
+        id: "opsProject",
+        header: "OPS Project",
+        size: 220,
+        Cell: ({ row }) => {
+          const jiraId = row.original.jiraId;
+
+          return (
+            <Select
+              data={opsProjectOptions}
+              value={projectByJira[jiraId]?.optId ?? null}
+              onChange={(value) => {
+                if (!value) {
+                  return;
+                }
+
+                setProjectByJira((current) => ({
+                  ...current,
+                  [jiraId]: value ? opsProjectMap[value] : null,
+                }));
+              }}
+              placeholder="Select project"
+              size="xs"
+              allowDeselect={false}
+              disabled={isProjectsLoading || opsProjectOptions.length === 0}
+              comboboxProps={{
+                withinPortal: true,
+              }}
+            />
+          );
+        },
+      },
+      {
         accessorKey: "jiraId",
         header: "JIRA ID",
         size: 120,
@@ -150,7 +225,7 @@ export function ImportOpsModal({
         size: 500,
       },
     ],
-    [],
+    [opsProjectOptions, projectByJira, opsProjectMap],
   );
 
   const table = useMantineReactTable({
@@ -191,22 +266,15 @@ export function ImportOpsModal({
     .rows.map((row) => row.original);
 
   const handleImport = () => {
-    console.log("Import OPS - selected rows:", selectedActivities);
-
-    selectedActivities.forEach((activity) => {
-      console.log({
-        jiraId: activity.jiraId,
-        date: activity.date,
-        user: activity.userName,
-        title: activity.title,
-        effort: activity.effort,
-      });
+    const activities = selectedActivities.map<OpsImportActivity>((activity) => {
+      return {
+        ...activity,
+        opsProjectOptId: projectByJira[activity.jiraId]?.optId ?? null,
+        opsProjectValueId: projectByJira[activity.jiraId]?.valueId ?? null,
+      };
     });
-
-    // TODO:
-    // trigger import API here
-
-    onClose();
+    const script = getOpsScript(activities, { isAutoSubmit: false });
+    console.log(script);
   };
 
   const handleUserChange = (value: string | null) => {
