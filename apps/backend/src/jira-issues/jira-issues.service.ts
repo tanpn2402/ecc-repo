@@ -544,6 +544,9 @@ export class JiraIssuesService extends EventEmitter {
         mrUrl: parsedMr.canonicalUrl,
         gitlabProject: parsedMr.projectPath,
         reviewSkill,
+        // mrTitle: mrMeta.title,
+        // mrAuthor: mrMeta.author,
+        gitlabToken: this.gitlabClient.token,
       });
 
       logger.info('Claude code-review prompt', { mrId, reviewSkill, prompt });

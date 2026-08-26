@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { MrModule } from '../mr/mr.module';
 import { GitlabActivitiesController } from './gitlab-activities.controller';
 import { GitlabActivitiesService } from './gitlab-activities.service';
 
@@ -12,7 +11,7 @@ import { GitlabActivitiesService } from './gitlab-activities.service';
  * second one.
  */
 @Module({
-  imports: [MrModule],
+  imports: [],
   controllers: [GitlabActivitiesController],
   providers: [GitlabActivitiesService],
 })

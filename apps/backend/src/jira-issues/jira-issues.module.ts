@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { MrModule } from "../mr/mr.module";
 import { ClaudeModule } from "../claude/claude.module";
 import { WorkspaceModule } from "../workspace/workspace.module";
 import { JiraIssuesRepository } from "./jira-issues.repository";
@@ -20,7 +19,7 @@ import { JiraMetaController } from "./jira-meta.controller";
  * connection (see ws/mr.gateway.ts).
  */
 @Module({
-  imports: [MrModule, ClaudeModule, WorkspaceModule],
+  imports: [ClaudeModule, WorkspaceModule],
   controllers: [
     JiraIssuesController,
     SyncedIssuesController,

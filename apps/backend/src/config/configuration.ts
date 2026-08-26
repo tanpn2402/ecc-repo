@@ -13,6 +13,7 @@ export interface AppConfig {
     isProduction: boolean;
   };
   telegram: {
+    enabled: boolean;
     botToken: string;
     allowedUsers: Set<number>;
     editIntervalMs: number;
@@ -217,6 +218,7 @@ function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       isProduction: nodeEnv === "production",
     },
     telegram: {
+      enabled: String(botToken).trim().length > 0,
       botToken,
       allowedUsers,
       editIntervalMs: Number(env.TELEGRAM_EDIT_INTERVAL_MS || 1000),

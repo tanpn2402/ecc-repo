@@ -1,7 +1,6 @@
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer, OnGatewayConnection } from '@nestjs/websockets';
 import type { Server as WsServerType, WebSocket as WsClientType } from 'ws';
-import { MrService } from '../mr/mr.service';
 import { JiraIssuesService } from '../jira-issues/jira-issues.service';
 import logger from '../common/logger';
 
@@ -28,7 +27,6 @@ export class MrGateway implements OnModuleInit, OnModuleDestroy, OnGatewayConnec
   @WebSocketServer() server!: WsServerType;
 
   constructor(
-    @Inject(MrService) private readonly mrService: MrService,
     @Inject(JiraIssuesService) private readonly jiraIssuesService: JiraIssuesService
   ) {}
 
@@ -66,12 +64,6 @@ export class MrGateway implements OnModuleInit, OnModuleDestroy, OnGatewayConnec
 
   onModuleInit(): void {
     const forward = (type: string) => (payload: unknown) => this.broadcast(type, payload);
-    this.mrService.on('mr.created', forward('mr.created'));
-    this.mrService.on('mr.updated', forward('mr.updated'));
-    this.mrService.on('mr.review.started', forward('mr.review.started'));
-    this.mrService.on('mr.review.completed', forward('mr.review.completed'));
-    this.mrService.on('mr.review.failed', forward('mr.review.failed'));
-    this.mrService.on('mr.console', forward('mr.console'));
 
     // "Jira Issues" page's real review job (stage 5, see jira-issues.service.ts).
     this.jiraIssuesService.on('jira.review.started', forward('jira.review.started'));

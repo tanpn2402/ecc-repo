@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { MrModule } from '../mr/mr.module';
 import { JiraIssuesModule } from '../jira-issues/jira-issues.module';
 import { MrGateway } from './mr.gateway';
 
@@ -10,7 +9,7 @@ import { MrGateway } from './mr.gateway';
  * rather than accepting-then-ignoring connections.
  */
 @Module({
-  imports: [MrModule, JiraIssuesModule],
+  imports: [JiraIssuesModule],
   providers: [MrGateway],
 })
 export class WsModule {}
