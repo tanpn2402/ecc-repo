@@ -5,23 +5,28 @@
 // Management feature. This page's review_runs only ever stores
 // verdict/summary/findings (see jira-issues.repository.ts).
 
-export interface JiraReviewFinding {
-  severity: string;
-  text: string;
-}
+export const JIRA_REVIEW_STATUSES = ['COMPLETED', 'FAILED'] as const;
+
+export const JIRA_REVIEW_VERDICTS = [
+  'APPROVE',
+  'REQUEST_CHANGES',
+  'COMMENT',
+] as const;
+
+export type JiraReviewStatus = (typeof JIRA_REVIEW_STATUSES)[number];
+export type JiraReviewVerdict = (typeof JIRA_REVIEW_VERDICTS)[number];
 
 export interface JiraReviewResultValue {
-  verdict: string;
+  status: JiraReviewStatus;
+  verdict: JiraReviewVerdict;
   summary: string;
-  findings: JiraReviewFinding[];
 }
 
-export const JIRA_REVIEW_VERDICTS = ['Approved', 'Changes Requested', 'Blocked'];
+export type JiraReviewValidation =
+  { ok: true; value: JiraReviewResultValue } | { ok: false; error: string };
 
-export type JiraReviewValidation = { ok: true; value: JiraReviewResultValue } | { ok: false; error: string };
-
-function isFindingsArray(value: any): value is JiraReviewFinding[] {
-  return Array.isArray(value) && value.every((f) => f && typeof f === 'object' && typeof f.severity === 'string' && typeof f.text === 'string');
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 /** Validates a parsed JSON object against the Jira Issues page's review contract. */
@@ -29,23 +34,40 @@ export function validateJiraReviewResult(obj: any): JiraReviewValidation {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
     return { ok: false, error: 'Result is not a JSON object' };
   }
-  if (typeof obj.verdict !== 'string' || !JIRA_REVIEW_VERDICTS.includes(obj.verdict)) {
-    return { ok: false, error: `"verdict" must be one of ${JIRA_REVIEW_VERDICTS.join(', ')}` };
+
+  const review = obj.review;
+
+  if (!review || typeof review !== 'object' || Array.isArray(review)) {
+    return { ok: false, error: 'Missing "review" object' };
   }
-  if (typeof obj.summary !== 'string' || !obj.summary.trim()) {
-    return { ok: false, error: 'Missing "summary"' };
+
+  if (!JIRA_REVIEW_STATUSES.includes(review.status)) {
+    return {
+      ok: false,
+      error: `"review.status" must be one of ${JIRA_REVIEW_STATUSES.join(', ')}`,
+    };
   }
-  const findings = obj.findings ?? [];
-  if (!isFindingsArray(findings)) {
-    return { ok: false, error: '"findings" must be an array of { severity, text }' };
+
+  if (!JIRA_REVIEW_VERDICTS.includes(review.verdict)) {
+    return {
+      ok: false,
+      error: `"review.verdict" must be one of ${JIRA_REVIEW_VERDICTS.join(', ')}`,
+    };
+  }
+
+  if (!isNonEmptyString(review.summary)) {
+    return {
+      ok: false,
+      error: 'Missing "review.summary"',
+    };
   }
 
   return {
     ok: true,
     value: {
-      verdict: obj.verdict,
-      summary: obj.summary.trim(),
-      findings: findings.map((f) => ({ severity: f.severity.trim(), text: f.text.trim() })).filter((f) => f.text),
+      status: review.status,
+      verdict: review.verdict,
+      summary: review.summary.trim(),
     },
   };
 }

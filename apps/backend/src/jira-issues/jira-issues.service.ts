@@ -65,6 +65,7 @@ export interface IssueDto {
   avatarColorVar: string;
   status: string;
   updated: string;
+  createdAt: string;
 }
 
 export interface AtlassianIssueDto extends IssueDto {
@@ -139,7 +140,8 @@ export class JiraIssuesService extends EventEmitter {
       avatarInitial: avatarInitial(row.assignee),
       avatarColorVar: avatarColorVar(row.assignee),
       status: row.status,
-      updated: formatRelativeTime(row.jiraUpdatedAt),
+      updated: row.jiraUpdatedAt ?? "",
+      createdAt: row.createdAt,
     };
   }
 
@@ -252,7 +254,8 @@ export class JiraIssuesService extends EventEmitter {
         avatarInitial: avatarInitial(issue.assignee),
         avatarColorVar: avatarColorVar(issue.assignee),
         status: mapJiraStatus(issue.status),
-        updated: formatRelativeTime(issue.updated),
+        updated: issue.updated,
+        createdAt: issue.createdAt,
         synced: Boolean(synced),
       };
     });
@@ -310,6 +313,7 @@ export class JiraIssuesService extends EventEmitter {
       assignee: fresh.assignee,
       status: mapJiraStatus(fresh.status),
       jiraUpdatedAt: fresh.updated || null,
+      createdAt: fresh.createdAt,
     });
 
     return this.mapSyncedIssue(this.repo.getSyncedByKey(issueKey)!);
@@ -523,10 +527,10 @@ export class JiraIssuesService extends EventEmitter {
     this.repo.setReviewRunning(reviewId);
     this.emit('jira.review.started', { mrId, jiraKey, reviewId: String(reviewId) });
 
-    // if (!this.config.app.isProduction) {
-    //   await this._simulateReview(mrId, reviewId, jiraKey);
-    //   return;
-    // }
+    if (!this.config.app.isProduction) {
+      await this._simulateReview(mrId, reviewId, jiraKey);
+      return;
+    }
 
     const onEvent = (evt: any) => {
       const chunk = formatConsoleChunk(evt);
@@ -544,8 +548,6 @@ export class JiraIssuesService extends EventEmitter {
         mrUrl: parsedMr.canonicalUrl,
         gitlabProject: parsedMr.projectPath,
         reviewSkill,
-        // mrTitle: mrMeta.title,
-        // mrAuthor: mrMeta.author,
         gitlabToken: this.gitlabClient.token,
       });
 
@@ -570,10 +572,10 @@ export class JiraIssuesService extends EventEmitter {
       }
 
       const completed = this.repo.completeReview(reviewId, {
-        status: 'completed',
+        status: parsedResult.value.status,
         verdict: parsedResult.value.verdict,
         summary: parsedResult.value.summary,
-        findings: parsedResult.value.findings,
+        findings: [],
         consoleLog: this.liveConsoleLogs.get(mrId) || '',
       });
       this.liveConsoleLogs.delete(mrId);

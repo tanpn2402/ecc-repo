@@ -18,12 +18,10 @@ export interface BuildJiraReviewPromptParams {
   mrUrl: string;
   gitlabProject: string;
   reviewSkill?: string;
-  mrTitle?: string | null;
-  mrAuthor?: string | null;
   gitlabToken?: string;
 }
 
-export function buildJiraReviewPrompt({ mrUrl, gitlabProject, reviewSkill = 'reviewcsbfo', mrAuthor, mrTitle, gitlabToken }: BuildJiraReviewPromptParams): string {
+export function buildJiraReviewPrompt({ mrUrl, gitlabProject, reviewSkill = 'reviewcsbfo', gitlabToken }: BuildJiraReviewPromptParams): string {
   return `You are performing a senior-level code review of a GitLab Merge Request.
 
 Use SKILL '${reviewSkill}' to review the code changes for this merge request.
@@ -31,8 +29,6 @@ Use SKILL '${reviewSkill}' to review the code changes for this merge request.
 Merge request:
 - URL: ${mrUrl}
 - GitLab project: ${gitlabProject}
-- Title: ${mrTitle || '(unknown)'}
-- Author: ${mrAuthor || '(unknown)'}
 - GITLAB_TOKEN: ${gitlabToken}
 
 Review the actual changes and surrounding code carefully. Do not fabricate information that you could not verify.

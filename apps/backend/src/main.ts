@@ -50,7 +50,7 @@ async function bootstrap() {
   // even runs — matching index.js's main() ordering exactly (fail fast,
   // never start Telegram polling or the HTTP server on bad configuration).
   const config = loadConfig();
-  validateStartupConfig(config);
+  validateStartupConfig(config, logger.error, logger.warn);
 
   logger.info('Starting Telegram Claude Gateway', {
     workspaces: [...config.workspaces.keys()],

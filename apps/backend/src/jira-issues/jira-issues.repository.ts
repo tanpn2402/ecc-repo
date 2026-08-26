@@ -16,6 +16,7 @@ export interface UpsertSyncedIssueInput {
   group: string | null;
   assignee: string | null;
   status: string;
+  createdAt: string;
   jiraUpdatedAt: string | null;
 }
 

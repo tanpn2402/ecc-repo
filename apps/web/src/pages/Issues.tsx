@@ -19,6 +19,7 @@ import { Issue } from "@/types";
 import { MRTable } from "@/components/mr-table/MRTable";
 import { AddIssueModal } from "@/components/modals/AddIssueModal";
 import { useSearchParams } from "react-router-dom";
+import { compactRelativeTime } from "@/utils/datetime.utils";
 
 export function Issues() {
   const [opened, setOpened] = useState(false);
@@ -57,9 +58,11 @@ export function Issues() {
     [setSearchParams],
   );
 
+  const { data: metadata, isLoading } = useJiraMetadata();
   const atlassianIssues = useJiraIssues();
   const syncedIssues = useSyncedIssues();
   const removeSyncedIssue = useRemoveSyncedIssue();
+  const syncIssue = useSyncIssue();
 
   const jiraIssues = useMemo(() => {
     const issues =
@@ -69,9 +72,6 @@ export function Issues() {
     }
     return issues;
   }, [atlassianIssues.data, syncedIssues.data, group, tab]);
-
-  const { data: metadata, isLoading } = useJiraMetadata();
-  const syncIssue = useSyncIssue();
 
   const assignIssueToGroup = useCallback(
     (jiraKey: string, groupId: string) => {
@@ -133,7 +133,7 @@ export function Issues() {
     {
       accessorKey: "summary",
       header: "Summary",
-      size: 500,
+      size: 700,
     },
     // {
     //   accessorKey: "priority",
@@ -149,6 +149,18 @@ export function Issues() {
       accessorKey: "assignee",
       header: "Assignee",
       size: 180,
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Created At",
+      size: 140,
+      Cell: ({ cell }) => compactRelativeTime(cell.getValue<string>()),
+    },
+    {
+      accessorKey: "updated",
+      header: "Updated At",
+      size: 140,
+      Cell: ({ cell }) => compactRelativeTime(cell.getValue<string>()),
     },
     {
       accessorKey: "group",
@@ -181,8 +193,18 @@ export function Issues() {
     enableExpandAll: false,
     enableExpanding: true,
     enableBottomToolbar: false,
+    enablePagination: false,
     initialState: {
       density: "md",
+      grouping: ["group"],
+      expanded: {
+        group: true,
+      },
+      columnVisibility: {
+        sprint: false,
+        updated: false,
+      },
+      sorting: [{ id: "createdAt", desc: true }],
     },
     state: {
       showProgressBars:
@@ -207,6 +229,13 @@ export function Issues() {
         {tab === "synced" ? (
           <>
             <Menu.Divider />
+            <Menu.Item
+              onClick={() =>
+                assignIssueToGroup(row.getValue("key"), row.original.group)
+              }
+            >
+              Re-fetch Jira Data
+            </Menu.Item>
             <Menu.Item onClick={() => markIssueDone(row.getValue("key"))}>
               Mark Done
             </Menu.Item>
