@@ -1,14 +1,18 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_ColumnDef,
 } from "@repo/mantine-table";
-import { useGitlabActivities } from "@/hooks/use-gitlab-activities";
+import {
+  useGitlabActivities,
+  useGitlabActivitiesMeta,
+} from "@/hooks/use-gitlab-activities";
 import { GitlabActivity } from "@/types";
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
-import { Anchor, Button, Group, Text } from "@mantine/core";
+import { Anchor, Button, Group, Select, Text } from "@mantine/core";
 import { extractJiraId } from "@/utils/jira.utils";
 import { IconPlayerPlay } from "@tabler/icons-react";
 import { DateInput } from "@mantine/dates";
@@ -38,19 +42,75 @@ function addDays(value: string, days: number): string {
 }
 
 export function GitlabActivities() {
-  const thisWeek = getThisWeek();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [fromDate, setFromDate] = useState<string | null>(thisWeek.from);
-  const [toDate, setToDate] = useState<string | null>(thisWeek.to);
+  const thisWeek = useMemo(() => getThisWeek(), []);
+
+  const fromDate = searchParams.get("from") ?? thisWeek.from;
+
+  const toDate = searchParams.get("to") ?? thisWeek.to;
+
+  const userId = searchParams.get("userId");
 
   const [importOpened, setImportOpened] = useState(false);
 
-  const params = {
-    userIds: [],
-    types: [],
-    from: fromDate ? addDays(fromDate, -1) : "",
-    to: toDate ? addDays(toDate, 1) : "",
+  const { data: metadata, isLoading: isMetaLoading } =
+    useGitlabActivitiesMeta();
+
+  const userOptions = useMemo(
+    () =>
+      (metadata?.users ?? []).map((user) => ({
+        value: String(user.id),
+        label: user.name,
+      })),
+    [metadata],
+  );
+
+  const setFromDate = (value: string | null) => {
+    setSearchParams((params) => {
+      if (value) {
+        params.set("from", value);
+      } else {
+        params.delete("from");
+      }
+
+      return params;
+    });
   };
+
+  const setToDate = (value: string | null) => {
+    setSearchParams((params) => {
+      if (value) {
+        params.set("to", value);
+      } else {
+        params.delete("to");
+      }
+
+      return params;
+    });
+  };
+
+  const setUserId = (value: string | null) => {
+    setSearchParams((params) => {
+      if (value) {
+        params.set("userId", value);
+      } else {
+        params.delete("userId");
+      }
+
+      return params;
+    });
+  };
+
+  const params = useMemo(
+    () => ({
+      userIds: userId ? [Number(userId)] : [],
+      types: [],
+      from: addDays(fromDate, -1),
+      to: addDays(toDate, 1),
+    }),
+    [fromDate, toDate, userId],
+  );
 
   const { data = [], isLoading } = useGitlabActivities(params);
 
@@ -61,6 +121,7 @@ export function GitlabActivities() {
         header: "Date",
         Cell: ({ cell }) => {
           const date = cell.getValue<string>();
+
           return `${date} (${formatDayName(date)})`;
         },
         size: 200,
@@ -139,11 +200,11 @@ export function GitlabActivities() {
     enableGrouping: true,
     enableColumnOrdering: true,
     enableColumnResizing: true,
+    groupedColumnMode: "reorder",
     initialState: {
       grouping: ["date"],
       expanded: true,
     },
-    groupedColumnMode: "reorder",
     state: {
       isLoading,
     },
@@ -185,10 +246,23 @@ export function GitlabActivities() {
               w={140}
             />
           </Group>,
-        ]}
 
+          <Select
+            key="user"
+            placeholder="User"
+            data={userOptions}
+            value={userId}
+            onChange={setUserId}
+            clearable
+            searchable
+            size="sm"
+            w={180}
+            disabled={isMetaLoading}
+          />,
+        ]}
         actions={[
           <Button
+            key="import"
             leftSection={<IconPlayerPlay size={16} />}
             onClick={() => setImportOpened(true)}
           >
@@ -196,6 +270,7 @@ export function GitlabActivities() {
           </Button>,
         ]}
       />
+
       <PageContent>
         <MantineReactTable table={table} />
       </PageContent>
@@ -203,7 +278,7 @@ export function GitlabActivities() {
       <ImportOpsModal
         opened={importOpened}
         onClose={() => setImportOpened(false)}
-        activities={data ?? []}
+        activities={data}
       />
     </div>
   );

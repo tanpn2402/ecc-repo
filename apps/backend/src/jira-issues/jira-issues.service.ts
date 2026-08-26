@@ -523,10 +523,10 @@ export class JiraIssuesService extends EventEmitter {
     this.repo.setReviewRunning(reviewId);
     this.emit('jira.review.started', { mrId, jiraKey, reviewId: String(reviewId) });
 
-    if (!this.config.app.isProduction) {
-      await this._simulateReview(mrId, reviewId, jiraKey);
-      return;
-    }
+    // if (!this.config.app.isProduction) {
+    //   await this._simulateReview(mrId, reviewId, jiraKey);
+    //   return;
+    // }
 
     const onEvent = (evt: any) => {
       const chunk = formatConsoleChunk(evt);

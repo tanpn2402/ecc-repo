@@ -25,7 +25,7 @@ export class WorkspaceService {
   }
 
   list(): string[] {
-    return [...this.workspaces.keys()].sort();
+    return [...this.workspaces.keys()];
   }
 
   has(name: string | null | undefined): boolean {

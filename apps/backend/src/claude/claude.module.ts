@@ -3,9 +3,15 @@ import { APP_CONFIG } from '../config/config.module';
 import type { AppConfig } from '../config/configuration';
 import { ClaudeClient } from './claude-client';
 import { ClaudeLifecycleService } from './claude-lifecycle.service';
+import { ClaudeController } from './claude.controller';
+import { ClaudeService } from './claude.service';
 
 @Module({
+  controllers: [ClaudeController],
+
   providers: [
+    ClaudeService,
+    
     {
       provide: ClaudeClient,
       inject: [APP_CONFIG],
@@ -17,6 +23,6 @@ import { ClaudeLifecycleService } from './claude-lifecycle.service';
     },
     ClaudeLifecycleService,
   ],
-  exports: [ClaudeClient],
+  exports: [ClaudeClient, ClaudeService],
 })
 export class ClaudeModule {}

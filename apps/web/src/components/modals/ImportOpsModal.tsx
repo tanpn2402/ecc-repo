@@ -199,6 +199,7 @@ export function ImportOpsModal({
         date: activity.date,
         user: activity.userName,
         title: activity.title,
+        effort: activity.effort,
       });
     });
 

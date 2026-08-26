@@ -10,7 +10,7 @@ import {
 
 import type { ReviewRun } from "@/types";
 
-import { ReviewDetail } from "./ReviewDetail";
+import { MRReviewDetail } from "./MRReviewDetail";
 import { formatDateTime } from "@/utils/datetime.utils";
 
 type ReviewHistoryProps = {
@@ -78,7 +78,7 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
       history.length > 0
         ? ({ row }) => (
           <Stack p="md">
-            <ReviewDetail review={row.original} />
+            <MRReviewDetail review={row.original} />
           </Stack>
         )
         : undefined,

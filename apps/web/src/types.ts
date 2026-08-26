@@ -94,6 +94,7 @@ export interface MergeRequest {
   avatarInitial: string;
   avatarColorVar: string; // tailwind bg-* class for the avatar
   status: JiraMrStatus;
+  state: string;
   createdAt: string;
   lastRun: string;
   actionLabel: "Review" | "Re-review";
@@ -206,4 +207,14 @@ export interface JiraReviewWsEvent {
 
 export interface JiraMeta {
   groups: { id: string; name: string }[];
+}
+
+export interface ClaudeUsageLimit {
+  utilization: number;
+  resetsAt: string;
+}
+
+export interface ClaudeUsage {
+  fiveHour: ClaudeUsageLimit | null;
+  sevenDay: ClaudeUsageLimit | null;
 }

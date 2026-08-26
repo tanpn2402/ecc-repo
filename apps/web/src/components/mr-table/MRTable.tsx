@@ -6,7 +6,7 @@ import {
   type MRT_ColumnDef,
 } from "@repo/mantine-table";
 import { MergeRequest } from "@/types";
-import { Anchor, Badge, Button, Center, Group, Text } from "@mantine/core";
+import { Anchor, Button, Center, Group, Text } from "@mantine/core";
 import { MRDetailDrawer } from "./MRDetailDrawer";
 import { MRReviewDialog } from "./MRReviewDialog";
 import { IconMenuDeep, IconPlayerPlay } from "@tabler/icons-react";
@@ -61,15 +61,13 @@ export function MRTable({ jiraKey }: MRTableProps) {
       size: 140,
       Cell: ({ cell, row }) => {
         const status = cell.getValue<string>();
-        const gitlabState = row.getValue<string>("state");
+        const gitlabState = row.original.state;
 
         if (["merged"].includes(gitlabState)) {
-          return <MRStatusBadge status='MERGED' />;
+          return <MRStatusBadge status="MERGED" />;
         }
 
-        return (
-          <MRStatusBadge status={status} />
-        );
+        return <MRStatusBadge status={status} />;
       },
     },
     {

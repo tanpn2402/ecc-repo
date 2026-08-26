@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { NavLink } from "react-router-dom";
 import classes from "./NavbarSimple.module.css";
+import { ClaudeUsage } from "../claude-usage/ClaudeUsage";
 
 const data = [
   {
@@ -57,6 +58,8 @@ export function NavbarSimple() {
       <div className={classes.navbarMain}>{links}</div>
 
       <div className={classes.footer}>
+        <ClaudeUsage />
+
         <a
           href="#"
           className={classes.link}

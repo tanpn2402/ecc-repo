@@ -10,7 +10,7 @@ import type { MergeRequest } from "@/types";
 import { useMrReviews } from "@/hooks/use-merge-requests";
 
 import { ConsoleTab } from "./MRConsoleTab";
-import { ReviewDetail } from "./ReviewDetail";
+import { MRReviewDetail } from "./MRReviewDetail";
 import { MRReviewHistory } from "./MRReviewHistory";
 import MRStatusBadge from "./MRStatusBadge";
 
@@ -113,7 +113,7 @@ export function MRDetailDrawer({
           </Tabs.Panel>
 
           <Tabs.Panel value="detail" pt="md">
-            <ReviewDetail review={mrReviews.data?.latest ?? null} />
+            <MRReviewDetail review={mrReviews.data?.latest ?? null} />
           </Tabs.Panel>
 
           <Tabs.Panel value="history" pt="md">

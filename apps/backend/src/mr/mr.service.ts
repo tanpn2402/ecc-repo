@@ -184,6 +184,7 @@ export class MrService extends EventEmitter {
         reviewSkill,
         mrTitle: mrMeta.title,
         mrAuthor: mrMeta.author,
+        gitlabToken: this.gitlabClient.token,
       });
       const result = await this.claudeClient.run(`mr:${mrId}`, { cwd, prompt }, this._streamToConsole(mrId));
 

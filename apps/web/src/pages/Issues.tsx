@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
-import { Anchor, Box, Button, Menu, Select } from "@mantine/core";
+import { Anchor, Button, Menu, ScrollArea, Select } from "@mantine/core";
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
 import { useJiraMetadata } from "@/hooks/use-jira-metadata";
@@ -18,11 +18,44 @@ import {
 import { Issue } from "@/types";
 import { MRTable } from "@/components/mr-table/MRTable";
 import { AddIssueModal } from "@/components/modals/AddIssueModal";
+import { useSearchParams } from "react-router-dom";
 
 export function Issues() {
   const [opened, setOpened] = useState(false);
-  const [tab, setTab] = useState<string | null>("synced");
-  const [group, setGroup] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const tab = searchParams.get("tab") ?? "synced";
+  const group = searchParams.get("group");
+
+  const setGroup = useCallback(
+    (value: string | null) => {
+      setSearchParams((params) => {
+        if (value) {
+          params.set("group", value);
+        } else {
+          params.delete("group");
+        }
+
+        return params;
+      });
+    },
+    [setSearchParams],
+  );
+
+  const setTab = useCallback(
+    (value: string | null) => {
+      setSearchParams((params) => {
+        if (value) {
+          params.set("tab", value);
+        } else {
+          params.delete("tab");
+        }
+
+        return params;
+      });
+    },
+    [setSearchParams],
+  );
 
   const atlassianIssues = useJiraIssues();
   const syncedIssues = useSyncedIssues();
@@ -135,19 +168,21 @@ export function Issues() {
     enableDensityToggle: false,
     enableColumnFilters: true,
     columnFilterDisplayMode: "popover",
-    enableFullScreenToggle: false,
+    enableFullScreenToggle: true,
     enableColumnActions: false,
     enableColumnResizing: true,
     enableHiding: true,
-    enableColumnPinning: true,
-    enableTopToolbar: false,
+    enableGrouping: true,
+    groupedColumnMode: "reorder",
+    enableColumnPinning: false,
+    enableTopToolbar: true,
     enableRowActions: true,
     positionActionsColumn: "last",
     enableExpandAll: false,
     enableExpanding: true,
     enableBottomToolbar: false,
     initialState: {
-      // density: "xs",
+      density: "md",
     },
     state: {
       showProgressBars:
@@ -159,14 +194,16 @@ export function Issues() {
     renderRowActionMenuItems: ({ row }) => (
       <>
         <Menu.Label>Assign to group</Menu.Label>
-        {groups.map(({ value, label }) => (
-          <Menu.Item
-            key={value}
-            onClick={() => assignIssueToGroup(row.getValue("key"), value)}
-          >
-            {label}
-          </Menu.Item>
-        ))}
+        <ScrollArea.Autosize mah={120}>
+          {groups.map(({ value, label }) => (
+            <Menu.Item
+              key={value}
+              onClick={() => assignIssueToGroup(row.getValue("key"), value)}
+            >
+              {label}
+            </Menu.Item>
+          ))}
+        </ScrollArea.Autosize>
         {tab === "synced" ? (
           <>
             <Menu.Divider />
