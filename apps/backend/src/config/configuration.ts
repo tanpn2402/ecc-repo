@@ -62,6 +62,10 @@ export interface AppConfig {
   ops: {
     projects: { optId: string; valueId: string; name: string }[];
   };
+  teams: {
+    enabled: boolean;
+    webhookUrl: string;
+  };
 }
 
 function parseAllowedUsers(raw: string | undefined): Set<number> {
@@ -229,6 +233,7 @@ function parseOpsGroups(
 
 function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const botToken = env.TELEGRAM_BOT_TOKEN || '';
+  const teamsWebhookUrl = env.TEAMS_WEBHOOK_URL || '';
   const allowedUsers = parseAllowedUsers(env.TELEGRAM_ALLOWED_USERS);
   const workspaces = parseWorkspaces(env);
 
@@ -258,6 +263,10 @@ function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       timeoutMs: Number(env.CLAUDE_TIMEOUT_MS || 1800000),
       permissionMode,
       model: env.CLAUDE_MODEL || '',
+    },
+    teams: {
+      enabled: String(teamsWebhookUrl).trim().length > 0,
+      webhookUrl: teamsWebhookUrl,
     },
     workspaces,
     storage: {

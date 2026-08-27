@@ -15,6 +15,7 @@ import logger from './common/logger';
 import GitlabClient from './mr/gitlab-client';
 import JiraClient from './mr/jira-client';
 import { OpsModule } from './ops/ops.module';
+import { TeamsModule } from './teams/teams.module';
 
 /**
  * Root module. Built via forRoot(config) rather than a static @Module
@@ -35,6 +36,7 @@ export class AppModule {
       JiraIssuesModule,
       GitlabActivitiesModule,
       OpsModule,
+      TeamsModule,
       GlobalModule,
     ];
     if (config.telegram.enabled) {
