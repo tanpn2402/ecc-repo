@@ -139,8 +139,8 @@ export class JiraIssuesService extends EventEmitter {
       assignee: row.assignee || 'Unassigned',
       avatarInitial: avatarInitial(row.assignee),
       avatarColorVar: avatarColorVar(row.assignee),
-      status: row.status,
-      updated: row.jiraUpdatedAt ?? "",
+      status: "-", // Will be updated via jira.data.updated
+      updated: row.jiraUpdatedAt ?? '',
       createdAt: row.createdAt,
     };
   }
@@ -191,8 +191,8 @@ export class JiraIssuesService extends EventEmitter {
         gitlabUrl: mrUrl.canonicalUrl,
         gitlabProject: mrUrl.projectPath,
         gitlabMrIid: mrUrl.iid,
-        author: "dev",
-        gitlabState: "opened",
+        author: 'dev',
+        gitlabState: 'opened',
         createdAt: new Date().getTime().toString(),
       };
     }
@@ -335,7 +335,21 @@ export class JiraIssuesService extends EventEmitter {
 
   /** GET /api/synced-issues (BACKEND_SPEC.md §5). */
   listSyncedIssues(query?: GetSyncedIssueQuery): IssueDto[] {
-    return this.repo.listSynced(query).map((row) => this.mapSyncedIssue(row));
+    const result = this.repo
+      .listSynced(query)
+      .map((row) => this.mapSyncedIssue(row));
+    this.getLiveJiraStatus(result);
+    return result;
+  }
+
+  async getLiveJiraStatus(issues: IssueDto[]) {
+    if (!this.jiraClient || !issues.length) {
+      return;
+    }
+    const keys = issues.map((issue) => issue.key).filter(Boolean);
+    const data = await this.jiraClient.getIssueData(keys);
+    const result = Object.values(data);
+    this.emit('jira.data.updated', result);
   }
 
   /**
@@ -421,9 +435,12 @@ export class JiraIssuesService extends EventEmitter {
     const gitlabUrl = decodeMrId(mrId);
     if (!gitlabUrl) throw new NotFoundException('Merge request not found');
     const rows = this.repo.listReviewsForUrl(gitlabUrl);
-    const latestCompletedReview = this.repo.getLatestCompletedReviewForUrl(gitlabUrl);
+    const latestCompletedReview =
+      this.repo.getLatestCompletedReviewForUrl(gitlabUrl);
     return {
-      latest: latestCompletedReview ? this.mapReview(latestCompletedReview) : null,
+      latest: latestCompletedReview
+        ? this.mapReview(latestCompletedReview)
+        : null,
       history: rows.map((row) => this.mapReview(row)),
     };
   }
@@ -447,6 +464,7 @@ export class JiraIssuesService extends EventEmitter {
     mrId: string,
     workspaceName: string,
     jiraKey: string,
+    devFeedback?: string,
   ): Promise<ReviewRunDto> {
     const gitlabUrl = decodeMrId(mrId);
     if (!gitlabUrl) throw new NotFoundException('Merge request not found');
@@ -480,7 +498,15 @@ export class JiraIssuesService extends EventEmitter {
     this.activeReviews.add(mrId);
     this.liveConsoleLogs.set(mrId, '');
 
-    this._runReview(mrId, parsed, validation.dir, queued.id, workspaceName, jiraKey)
+    this._runReview(
+      mrId,
+      parsed,
+      validation.dir,
+      queued.id,
+      workspaceName,
+      jiraKey,
+      devFeedback,
+    )
       .catch((err: any) =>
         logger.error('Unhandled error running Jira MR review job', {
           mrId,
@@ -523,9 +549,14 @@ export class JiraIssuesService extends EventEmitter {
     reviewId: number,
     workspaceName: string,
     jiraKey: string,
+    devFeedback?: string,
   ): Promise<void> {
     this.repo.setReviewRunning(reviewId);
-    this.emit('jira.review.started', { mrId, jiraKey, reviewId: String(reviewId) });
+    this.emit('jira.review.started', {
+      mrId,
+      jiraKey,
+      reviewId: String(reviewId),
+    });
 
     if (!this.config.app.isProduction) {
       await this._simulateReview(mrId, reviewId, jiraKey);
@@ -537,7 +568,11 @@ export class JiraIssuesService extends EventEmitter {
       if (!chunk) return;
       this.appendLiveConsole(mrId, reviewId, chunk);
       logger.info('Claude code-review console output', { mrId, chunk });
-      this.emit('jira.review.console', { mrId, reviewId: String(reviewId), chunk });
+      this.emit('jira.review.console', {
+        mrId,
+        reviewId: String(reviewId),
+        chunk,
+      });
     };
 
     try {
@@ -549,6 +584,7 @@ export class JiraIssuesService extends EventEmitter {
         gitlabProject: parsedMr.projectPath,
         reviewSkill,
         gitlabToken: this.gitlabClient.token,
+        devFeedback: devFeedback?.trim() || undefined,
       });
 
       logger.info('Claude code-review prompt', { mrId, reviewSkill, prompt });
@@ -607,7 +643,11 @@ export class JiraIssuesService extends EventEmitter {
    * turnaround) be exercised end-to-end in dev/staging without spending a
    * real Claude Code run. Gated by config.app.isProduction (NODE_ENV).
    */
-  private async _simulateReview(mrId: string, reviewId: number, jiraKey: string): Promise<void> {
+  private async _simulateReview(
+    mrId: string,
+    reviewId: number,
+    jiraKey: string,
+  ): Promise<void> {
     const totalMs = 90_000;
     const steps = [
       '▸ Claude session started\n',
@@ -647,7 +687,11 @@ export class JiraIssuesService extends EventEmitter {
       for (const chunk of steps) {
         await sleep(stepDelayMs);
         this.appendLiveConsole(mrId, reviewId, chunk);
-        this.emit('jira.review.console', { mrId, reviewId: String(reviewId), chunk });
+        this.emit('jira.review.console', {
+          mrId,
+          reviewId: String(reviewId),
+          chunk,
+        });
       }
       await sleep(totalMs - stepDelayMs * steps.length);
 

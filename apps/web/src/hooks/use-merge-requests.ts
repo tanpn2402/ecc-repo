@@ -14,8 +14,12 @@ export function useTriggerReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: { mrId: string; workspace: string; jiraKey: string }) =>
-      triggerReview(input),
+    mutationFn: (input: {
+      mrId: string;
+      workspace: string;
+      jiraKey: string;
+      devFeedback: string | undefined;
+    }) => triggerReview(input),
 
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

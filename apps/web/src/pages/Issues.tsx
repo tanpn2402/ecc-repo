@@ -1,6 +1,14 @@
 import { useCallback, useMemo, useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
-import { Anchor, Button, Menu, ScrollArea, Select } from "@mantine/core";
+import {
+  Anchor,
+  Badge,
+  Button,
+  Menu,
+  ScrollArea,
+  Select,
+  Skeleton,
+} from "@mantine/core";
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
 import { useJiraMetadata } from "@/hooks/use-jira-metadata";
@@ -149,6 +157,29 @@ export function Issues() {
       accessorKey: "assignee",
       header: "Assignee",
       size: 180,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      size: 180,
+      Cell: ({ cell }) => {
+        const status = cell.getValue<string>();
+        if (status === "-") {
+          return <Skeleton height={16} radius="xl" />;
+        }
+        const color =
+          {
+            "Development Done": "green",
+            "Delivered To PDM": "blue",
+            Open: "gray",
+            "In Progress": "yellow",
+          }[status] ?? "gray";
+        return (
+          <Badge color={color} variant="light">
+            {status}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "createdAt",

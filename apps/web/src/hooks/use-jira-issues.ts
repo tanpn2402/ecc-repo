@@ -81,14 +81,9 @@ export function useAddIssue() {
 }
 
 export function useSyncedIssues() {
-  const [issueGroup] = useAtom(jiraIssueGroup);
-
   return useQuery({
-    queryKey: ["synced-issues", issueGroup],
-    queryFn: () =>
-      fetchSyncedIssues({
-        group: issueGroup === "synced" ? undefined : issueGroup,
-      }),
+    queryKey: ["synced-issues"],
+    queryFn: () => fetchSyncedIssues({}),
   });
 }
 

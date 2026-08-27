@@ -66,15 +66,7 @@ export interface WsEvent {
 // docs/UI_API_MAPPING.md for the full request/response contract.
 
 export type JiraMrStatus = "REVIEWING" | "PENDING" | "BLOCKED";
-export type IssueStatus = "To Do" | "In Progress" | "In Review" | "Done";
 export type Priority = "High" | "Medium" | "Low";
-
-export const STATUS_TABS: IssueStatus[] = [
-  "To Do",
-  "In Progress",
-  "In Review",
-  "Done",
-];
 
 export interface MergeRequest {
   id: string;
@@ -106,7 +98,7 @@ export interface Issue {
   assignee: string;
   avatarInitial: string;
   avatarColorVar: string;
-  status: IssueStatus;
+  status: string;
   updated: string;
   // No `mrs` field — GET /api/jira/issues and /api/synced-issues never embed
   // MR data. Fetch it on-demand per issue via GET /api/jira/issues/:key/mrs

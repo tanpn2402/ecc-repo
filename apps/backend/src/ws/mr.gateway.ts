@@ -70,6 +70,7 @@ export class MrGateway implements OnModuleInit, OnModuleDestroy, OnGatewayConnec
     this.jiraIssuesService.on('jira.review.console', forward('jira.review.console'));
     this.jiraIssuesService.on('jira.review.completed', forward('jira.review.completed'));
     this.jiraIssuesService.on('jira.review.failed', forward('jira.review.failed'));
+    this.jiraIssuesService.on('jira.data.updated', forward('jira.data.updated'));
     logger.debug('WebSocket MR event forwarding wired up');
   }
 

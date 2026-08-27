@@ -1,6 +1,14 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Button, Group, Modal, Select, Stack, Text } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Modal,
+  Select,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 
 import type { MergeRequest } from "@/types";
 import { useWorkspaces } from "@/hooks/use-workspaces";
@@ -9,6 +17,7 @@ import { IconPlayerPlay } from "@tabler/icons-react";
 
 type ReviewForm = {
   workspace: string;
+  devFeedback: string;
 };
 
 type MRReviewDialogProps = {
@@ -18,7 +27,12 @@ type MRReviewDialogProps = {
   onClose: () => void;
 };
 
-export function MRReviewDialog({ jiraKey, mr, opened, onClose }: MRReviewDialogProps) {
+export function MRReviewDialog({
+  jiraKey,
+  mr,
+  opened,
+  onClose,
+}: MRReviewDialogProps) {
   const { data: workspaces = [], isLoading } = useWorkspaces();
   const triggerReview = useTriggerReview();
 
@@ -31,6 +45,7 @@ export function MRReviewDialog({ jiraKey, mr, opened, onClose }: MRReviewDialogP
   } = useForm<ReviewForm>({
     defaultValues: {
       workspace: "",
+      devFeedback: "",
     },
   });
 
@@ -52,6 +67,7 @@ export function MRReviewDialog({ jiraKey, mr, opened, onClose }: MRReviewDialogP
         mrId: mr.mrId,
         workspace: values.workspace,
         jiraKey,
+        devFeedback: values.devFeedback.trim() || undefined,
       },
       {
         onSuccess: onClose,
@@ -109,6 +125,21 @@ export function MRReviewDialog({ jiraKey, mr, opened, onClose }: MRReviewDialogP
             disabled={isLoading || triggerReview.isPending}
             error={errors.workspace?.message}
             required
+          />
+
+          <Textarea
+            label="Developer Feedback"
+            description="Optional. Add feedback from the developer for a re-review."
+            placeholder="e.g. Fixed the authorization issue in the print endpoint. Please verify the fix."
+            minRows={4}
+            autosize
+            maxRows={10}
+            {...{
+              value: watch("devFeedback"),
+              onChange: (event) =>
+                setValue("devFeedback", event.currentTarget.value),
+            }}
+            disabled={triggerReview.isPending}
           />
 
           {triggerReview.error && (

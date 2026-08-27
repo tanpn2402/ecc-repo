@@ -107,6 +107,45 @@ export class JiraClient {
     });
   }
 
+  async getIssueData(
+    keys: string[],
+  ): Promise<Record<string, Partial<JiraSearchIssue>>> {
+    if (!keys.length) return {};
+
+    const uniqueKeys = [...new Set(keys)];
+
+    const jql = `key in (${uniqueKeys.map((key) => `"${key}"`).join(',')})`;
+
+    const url =
+      `${this.baseUrl}/rest/api/3/search/jql` +
+      `?jql=${encodeURIComponent(jql)}` +
+      `&maxResults=${uniqueKeys.length}` +
+      `&fields=status`;
+
+    const res = await fetch(url, {
+      headers: {
+        ...this._authHeader(),
+        Accept: 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Jira API returned ${res.status} for issue data query`);
+    }
+
+    const body: any = await res.json();
+
+    return Object.fromEntries(
+      (body.issues || []).map((issue: any) => [
+        issue.key,
+        {
+          key: issue.key,
+          status: issue.fields?.status?.name ?? '',
+        },
+      ]),
+    );
+  }
+
   /**
    * Fetches remote links attached to one issue (BACKEND_SPEC.md §3/§4) —
    * used to find candidate GitLab MR URLs. Returns every link's URL/title

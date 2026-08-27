@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/api/socket.api";
-import { JiraMrStatus, MergeRequest, ReviewRun } from "@/types";
+import { Issue, JiraMrStatus, MergeRequest, ReviewRun } from "@/types";
 import { decodeMrId } from "@/utils/jira.utils";
 import { formatRelativeTime } from "@/utils/datetime.utils";
 import { MrReviews } from "@/api/merge-requests.api";
@@ -135,10 +135,42 @@ export function useSocket() {
       );
     });
 
+    const unsubscribeJiraStatusUpdated = socket.on<
+      { key: string; status: string }[]
+    >("jira.data.updated", (payload) => {
+      console.log("[WS] jira.data.updated", payload);
+      const issueDataMap = payload.reduce(
+        (result, p) => {
+          result[p.key] = p;
+          return result;
+        },
+        {} as Record<string, (typeof payload)[number]>,
+      );
+
+      queryClient.setQueryData<Issue[]>(["synced-issues"], (issues) => {
+        console.log("[WS] jira.data.updated", issues);
+        if (!issues) {
+          return issues;
+        }
+
+        const updatedIssue = issues.map((mr) =>
+          issueDataMap[mr.key]
+            ? {
+                ...mr,
+                status: issueDataMap[mr.key].status,
+              }
+            : mr,
+        );
+
+        return updatedIssue;
+      });
+    });
+
     return () => {
       unsubscribeStarted();
       unsubscribeCompleted();
       unsubscribeConsole();
+      unsubscribeJiraStatusUpdated();
       socket.disconnect();
     };
   }, [queryClient]);

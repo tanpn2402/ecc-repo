@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Inject, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { JiraIssuesService } from './jira-issues.service';
 
 /**
@@ -10,7 +19,9 @@ import { JiraIssuesService } from './jira-issues.service';
  */
 @Controller('api/merge-requests')
 export class JiraMrController {
-  constructor(@Inject(JiraIssuesService) private readonly service: JiraIssuesService) {}
+  constructor(
+    @Inject(JiraIssuesService) private readonly service: JiraIssuesService,
+  ) {}
 
   @Get(':mrId/reviews')
   reviews(@Param('mrId') mrId: string) {
@@ -19,15 +30,30 @@ export class JiraMrController {
 
   /** Body: { workspace: string } — one of GET /api/workspaces' `name` values, chosen via the "choose workspace" modal. */
   @Post(':mrId/review')
-  async review(@Param('mrId') mrId: string, @Body() body: { workspace?: string; jiraKey?: string }) {
+  async review(
+    @Param('mrId') mrId: string,
+    @Body()
+    body: { workspace?: string; jiraKey?: string; devFeedback?: string },
+  ) {
     if (!body?.workspace) {
-      throw new HttpException({ error: 'A workspace is required to start a review' }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { error: 'A workspace is required to start a review' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
     try {
-      return await this.service.triggerReview(mrId, body.workspace, body.jiraKey ?? "");
+      return await this.service.triggerReview(
+        mrId,
+        body.workspace,
+        body.jiraKey ?? '',
+        body.devFeedback?.trim() || undefined,
+      );
     } catch (err: any) {
       if (err instanceof HttpException) throw err;
-      throw new HttpException({ error: err.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        { error: err.message },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
