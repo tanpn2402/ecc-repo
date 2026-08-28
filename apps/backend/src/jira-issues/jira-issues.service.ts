@@ -25,11 +25,8 @@ import { formatConsoleChunk } from './format-console-chunk';
 import {
   mapJiraStatus,
   mapJiraPriority,
-  mapGitlabStateToMrStatus,
   avatarInitial,
   avatarColorVar,
-  formatRelativeTime,
-  formatMrId,
   encodeMrId,
   decodeMrId,
 } from './jira-mapping';
@@ -93,6 +90,7 @@ export interface GitlabMr {
   gitlabMrIid: number;
   gitlabState: string;
   author: string | null;
+  authorId: number | null;
   createdAt: string | null;
 }
 
@@ -127,6 +125,8 @@ export class JiraIssuesService extends EventEmitter {
    */
   private readonly liveConsoleLogs = new Map<string, string>();
 
+  private gitlabUserMap: Map<string, string> = new Map();
+
   constructor(
     @Inject(JiraClient) private readonly jiraClient: JiraClient | null,
     @Inject(GitlabClient) private readonly gitlabClient: GitlabClient,
@@ -139,6 +139,9 @@ export class JiraIssuesService extends EventEmitter {
     @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {
     super();
+    config.gitlabActivities.users.forEach((user) => {
+      this.gitlabUserMap.set(String(user.id), user.name);
+    });
   }
 
   private mapSyncedIssue(row: JiraIssueSyncedRow): IssueDto {
@@ -186,6 +189,7 @@ export class JiraIssuesService extends EventEmitter {
         gitlabProject: mrUrl.projectPath,
         gitlabMrIid: mrUrl.iid,
         author: mr.author || null,
+        authorId: mr.authorId || null,
         gitlabState: mr.state,
         createdAt: mr.createdAt,
       };
@@ -200,6 +204,7 @@ export class JiraIssuesService extends EventEmitter {
         gitlabProject: mrUrl.projectPath,
         gitlabMrIid: mrUrl.iid,
         author: 'dev',
+        authorId: null,
         gitlabState: 'opened',
         createdAt: new Date().getTime().toString(),
       };
@@ -218,7 +223,12 @@ export class JiraIssuesService extends EventEmitter {
       gitlabMrIid: resolved.gitlabMrIid,
       jiraKey: null,
       jiraTitle: null,
-      author: resolved.author || 'Unknown',
+      author:
+        (resolved.authorId
+          ? this.gitlabUserMap.get(String(resolved.authorId))
+          : resolved.author) ||
+        resolved.author ||
+        'Unknown',
       title: null,
       status: resolved.gitlabState,
       reviewStatus: latest?.status ?? null,

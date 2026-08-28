@@ -2,8 +2,57 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/api/socket.api";
 import { Issue, JiraMrStatus, MergeRequest, ReviewRun } from "@/types";
-import { formatRelativeTime } from "@/utils/datetime.utils";
 import { MrReviews } from "@/api/merge-requests.api";
+
+function onMRStarted(payload: { mrId: string; jiraKey: string }) {
+  return (
+    mrs: NoInfer<MergeRequest[]> | undefined,
+  ): NoInfer<MergeRequest[]> | undefined => {
+    console.log("[WS] jira.review.started", mrs);
+    if (!mrs) {
+      return mrs;
+    }
+
+    const updatedMrs = mrs.map((mr) =>
+      mr.mrId === payload.mrId
+        ? {
+            ...mr,
+            reviewStatus: "running",
+          }
+        : mr,
+    );
+
+    return updatedMrs;
+  };
+}
+
+function onMRCompleted(payload: {
+  mrId: string;
+  jiraKey: string;
+  review: ReviewRun;
+}) {
+  return (
+    mrs: NoInfer<MergeRequest[]> | undefined,
+  ): NoInfer<MergeRequest[]> | undefined => {
+    console.log("[WS] jira.review.completed", mrs);
+    if (!mrs) {
+      return mrs;
+    }
+
+    const updatedMrs = mrs.map((mr) =>
+      mr.mrId === payload.mrId
+        ? {
+            ...mr,
+            reviewStatus: payload.review.status,
+            reviewVerdict: payload.review.verdict,
+            reviewCompletedAt: payload.review.completedAt,
+          }
+        : mr,
+    );
+
+    return updatedMrs;
+  };
+}
 
 export function useSocket() {
   const queryClient = useQueryClient();
@@ -18,24 +67,12 @@ export function useSocket() {
 
         queryClient.setQueryData<MergeRequest[]>(
           ["jira", "issues", payload.jiraKey, "mrs"],
-          (mrs) => {
-            console.log("[WS] jira.review.started", mrs);
-            if (!mrs) {
-              return mrs;
-            }
+          onMRStarted(payload),
+        );
 
-            const updatedMrs = mrs.map((mr) =>
-              mr.mrId === payload.mrId
-                ? {
-                    ...mr,
-                    status: "REVIEWING" as JiraMrStatus,
-                    lastRun: "Running...",
-                  }
-                : mr,
-            );
-
-            return updatedMrs;
-          },
+        queryClient.setQueryData<MergeRequest[]>(
+          ["merge-requests"],
+          onMRStarted(payload),
         );
       },
     );
@@ -49,31 +86,12 @@ export function useSocket() {
 
       queryClient.setQueryData<MergeRequest[]>(
         ["jira", "issues", payload.jiraKey, "mrs"],
-        (mrs) => {
-          console.log("[WS] jira.review.completed", mrs);
-          if (!mrs) {
-            return mrs;
-          }
+        onMRCompleted(payload),
+      );
 
-          const when = formatRelativeTime(
-            payload.review.completedAt || payload.review.createdAt,
-          );
-
-          const updatedMrs = mrs.map((mr) =>
-            mr.mrId === payload.mrId
-              ? {
-                  ...mr,
-                  status: "PENDING" as JiraMrStatus,
-                  lastRun:
-                    payload.review.status === "failed"
-                      ? `Failed ${when}`
-                      : `${payload.review.verdict || "Reviewed"} ${when}`,
-                }
-              : mr,
-          );
-
-          return updatedMrs;
-        },
+      queryClient.setQueryData<MergeRequest[]>(
+        ["merge-requests"],
+        onMRCompleted(payload),
       );
 
       queryClient.setQueryData<MrReviews>(

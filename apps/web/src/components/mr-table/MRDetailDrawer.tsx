@@ -16,7 +16,7 @@ type MRDetailDrawerProps = {
 const JIRA_BASE = "https://tx-tech.atlassian.net/browse";
 
 export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
-  const mrReviews = useMrReviews(mr?.gitlabUrl ?? "");
+  const mrReviews = useMrReviews(mr?.mrId ?? "");
 
   if (!mr) {
     return null;
@@ -32,7 +32,13 @@ export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
       title={
         <>
           <Stack gap="xs">
-            <Text>Merge Request</Text>
+            <Text>JIRA details</Text>
+
+            {mr.jiraTitle && (
+              <Text fw={500} size="md">
+                {mr.jiraTitle}
+              </Text>
+            )}
 
             <Group gap="xs">
               <Text size="sm" c="dimmed">
@@ -49,12 +55,6 @@ export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
               </Anchor>
             </Group>
 
-            {mr.jiraTitle && (
-              <Text fw={500} size="sm">
-                {mr.jiraTitle}
-              </Text>
-            )}
-
             <Group gap="xs">
               <Text size="sm" c="dimmed">
                 MR:
@@ -66,7 +66,7 @@ export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
                 rel="noopener noreferrer"
                 size="sm"
               >
-                {mr.id}
+                !{mr.gitlabMrIid}
               </Anchor>
             </Group>
 

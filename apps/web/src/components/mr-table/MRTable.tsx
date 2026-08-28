@@ -116,14 +116,16 @@ export function MRTable({ jiraKey }: MRTableProps) {
             >
               Detail
             </Button>
-            <Button
-              size="compact-sm"
-              variant="default"
-              onClick={() => setReviewMrId(row.original.mrId)}
-              leftSection={<IconPlayerPlay size={16} />}
-            >
-              Review
-            </Button>
+            {row.original.status === "merged" ? null : (
+              <Button
+                size="compact-sm"
+                variant="default"
+                onClick={() => setReviewMrId(row.original.mrId)}
+                leftSection={<IconPlayerPlay size={16} />}
+              >
+                Review
+              </Button>
+            )}
           </Group>
         );
       },

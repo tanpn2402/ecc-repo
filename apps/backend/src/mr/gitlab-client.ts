@@ -11,9 +11,17 @@ export interface FetchMrMetadataParams {
   gitlabMrIid: string | number;
 }
 
+export interface FetchMrsMetadataParams {
+  gitlabUrl: string;
+  gitlabProject: string;
+  gitlabMrIids: Array<string | number>;
+}
+
 export interface GitlabMrInfo {
+  iid: number;
   title: string;
   author: string;
+  authorId: number;
   description: string;
   sourceBranch: string;
   targetBranch: string;
@@ -57,6 +65,20 @@ export class GitlabClient {
     this.token = token;
   }
 
+  private mapMr(body: any) {
+    return {
+      iid: typeof body.iid === 'number' ? body.iid : -1,
+      title: typeof body.title === 'string' ? body.title : '',
+      author: body.author && typeof body.author.username === 'string' ? body.author.username : '',
+      authorId: body.author && typeof body.author.id === 'number' ? body.author.id : -1,
+      description: typeof body.description === 'string' ? body.description : '',
+      sourceBranch: typeof body.source_branch === 'string' ? body.source_branch : '',
+      targetBranch: typeof body.target_branch === 'string' ? body.target_branch : '',
+      createdAt: typeof body.created_at === 'string' ? body.created_at : null,
+      state: typeof body.state === 'string' ? body.state : 'opened',
+    };
+  }
+
   /**
    * Fetches one MR's title/author/description/branches/state (opened |
    * merged | closed). description/sourceBranch are used to identify the
@@ -81,15 +103,57 @@ export class GitlabClient {
     const body: any = await res.json();
     logger.info("Fetched GitLab MR data", { body });
 
-    return {
-      title: typeof body.title === 'string' ? body.title : '',
-      author: body.author && typeof body.author.username === 'string' ? body.author.username : '',
-      description: typeof body.description === 'string' ? body.description : '',
-      sourceBranch: typeof body.source_branch === 'string' ? body.source_branch : '',
-      targetBranch: typeof body.target_branch === 'string' ? body.target_branch : '',
-      createdAt: typeof body.created_at === 'string' ? body.created_at : null,
-      state: typeof body.state === 'string' ? body.state : 'opened',
-    };
+    return this.mapMr(body);
+  }
+
+  async fetchMrs({
+    gitlabUrl,
+    gitlabProject,
+    gitlabMrIids,
+  }: FetchMrsMetadataParams): Promise<GitlabMrInfo[]> {
+    if (gitlabMrIids.length === 0) {
+      return [];
+    }
+
+    const host = new URL(gitlabUrl).host;
+    const projectId = encodeURIComponent(gitlabProject);
+    const url = new URL(
+      `https://${host}/api/v4/projects/${projectId}/merge_requests`,
+    );
+
+    for (const iid of gitlabMrIids) {
+      url.searchParams.append('iids[]', String(iid));
+    }
+
+    logger.info('Fetching GitLab MRs data', {
+      gitlabUrl,
+      gitlabProject,
+      gitlabMrIids,
+      url: url.toString(),
+    });
+
+    const res = await fetch(url, {
+      headers: this.token ? { 'PRIVATE-TOKEN': this.token } : {},
+    });
+
+    if (!res.ok) {
+      throw new Error(
+        `GitLab API returned ${res.status} for ${gitlabProject} MRs`,
+      );
+    }
+
+    const body: any = await res.json();
+
+    if (!Array.isArray(body)) {
+      return [];
+    }
+
+    logger.info('Fetched GitLab MRs data', {
+      gitlabProject,
+      count: body.length,
+    });
+
+    return body.map(this.mapMr);
   }
 
   /**
