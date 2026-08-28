@@ -69,23 +69,20 @@ export type JiraMrStatus = "REVIEWING" | "PENDING" | "BLOCKED";
 export type Priority = "High" | "Medium" | "Low";
 
 export interface MergeRequest {
-  id: string;
-  /**
-   * Pass this (not `id`, the display label like "!1901") to
-   * /api/merge-requests/:mrId/... MR data is never persisted server-side —
-   * this is the MR's own GitLab URL, base64url-encoded — so it's always
-   * present, whether the issue has been synced or not.
-   */
-  mrId: string;
-  url: string;
-  author: string;
-  avatarInitial: string;
-  avatarColorVar: string; // tailwind bg-* class for the avatar
-  status: JiraMrStatus;
-  state: string;
-  createdAt: string;
-  lastRun: string;
-  actionLabel: "Review" | "Re-review";
+  id: number;
+  mrId: string; // = encodeMrId(gitlabUrl)
+  gitlabUrl: string;
+  gitlabProject: string;
+  gitlabMrIid: number;
+  jiraKey: string | null;
+  jiraTitle: string | null;
+  author: string | null;
+  title: string | null;
+  status: string;
+  reviewStatus: string | null;
+  reviewVerdict: string | null;
+  reviewCompletedAt: string | null;
+  createdAt: string | null;
 }
 
 export interface Issue {

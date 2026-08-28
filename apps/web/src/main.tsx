@@ -16,6 +16,7 @@ import { createStore, Provider } from "jotai";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GitlabActivities } from "./pages/GitlabActivities";
 import { useSocket } from "./hooks/use-socket";
+import { MergeRequests } from "./pages/MergeRequests";
 
 const store = createStore();
 
@@ -58,6 +59,10 @@ const router = createBrowserRouter([
         element: <GitlabActivities />,
       },
       {
+        path: "/merge-requests",
+        element: <MergeRequests />,
+      },
+      {
         path: "*",
         element: <NotFound />,
       },
@@ -68,7 +73,7 @@ const router = createBrowserRouter([
 const Main = () => {
   useSocket();
   return <RouterProvider router={router} />;
-}
+};
 
 const App = () => (
   <MantineProvider theme={theme} defaultColorScheme="dark">

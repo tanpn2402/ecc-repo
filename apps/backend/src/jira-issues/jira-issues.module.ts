@@ -7,6 +7,7 @@ import { JiraIssuesController } from "./jira-issues.controller";
 import { SyncedIssuesController } from "./synced-issues.controller";
 import { JiraMrController } from "./jira-mr.controller";
 import { JiraMetaController } from "./jira-meta.controller";
+import { MrRepository } from "@/mr/mr.repository";
 
 /**
  * "Jira Issues" web page backend (docs/BACKEND_SPEC.md). Imports MrModule
@@ -26,7 +27,7 @@ import { JiraMetaController } from "./jira-meta.controller";
     JiraMrController,
     JiraMetaController,
   ],
-  providers: [JiraIssuesRepository, JiraIssuesService],
+  providers: [JiraIssuesRepository, MrRepository, JiraIssuesService],
   exports: [JiraIssuesService],
 })
 export class JiraIssuesModule {}

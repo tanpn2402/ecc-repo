@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "bdeb87e7-07e8-499b-9d00-dc569e041382",
+  "id": "947c3f89-a413-4e01-bcf4-0375df5ffcc9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "sessions": {
@@ -196,9 +196,9 @@
           "notNull": true,
           "autoincrement": false
         },
-        "jira_issue_id": {
-          "name": "jira_issue_id",
-          "type": "integer",
+        "jira_key": {
+          "name": "jira_key",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -222,20 +222,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "error_message": {
-          "name": "error_message",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "current_review_id": {
-          "name": "current_review_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "created_at": {
@@ -283,29 +269,15 @@
           ],
           "isUnique": false
         },
-        "idx_merge_requests_jira_issue_id": {
-          "name": "idx_merge_requests_jira_issue_id",
+        "idx_merge_requests_jira_key": {
+          "name": "idx_merge_requests_jira_key",
           "columns": [
-            "jira_issue_id"
+            "jira_key"
           ],
           "isUnique": false
         }
       },
-      "foreignKeys": {
-        "merge_requests_jira_issue_id_jira_issues_id_fk": {
-          "name": "merge_requests_jira_issue_id_jira_issues_id_fk",
-          "tableFrom": "merge_requests",
-          "tableTo": "jira_issues",
-          "columnsFrom": [
-            "jira_issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}

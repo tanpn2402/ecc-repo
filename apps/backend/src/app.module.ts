@@ -16,6 +16,7 @@ import GitlabClient from './mr/gitlab-client';
 import JiraClient from './mr/jira-client';
 import { OpsModule } from './ops/ops.module';
 import { TeamsModule } from './teams/teams.module';
+import { MrModule } from './mr/mr.module';
 
 /**
  * Root module. Built via forRoot(config) rather than a static @Module
@@ -34,6 +35,7 @@ export class AppModule {
       WorkspaceModule,
       ClaudeModule,
       JiraIssuesModule,
+      MrModule,
       GitlabActivitiesModule,
       OpsModule,
       TeamsModule,

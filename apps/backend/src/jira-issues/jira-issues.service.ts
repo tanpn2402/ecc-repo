@@ -8,7 +8,6 @@ import {
 import { EventEmitter } from 'node:events';
 import { JiraClient } from '../mr/jira-client';
 import { GitlabClient } from '../mr/gitlab-client';
-import type { GitlabMrInfo } from '../mr/gitlab-client';
 import { extractGitlabMrLinks } from '../mr/remote-link-extract';
 import { parseGitlabMrUrl } from '../mr/gitlab-url';
 import type { ParsedGitlabMrUrl } from '../mr/gitlab-url';
@@ -37,20 +36,23 @@ import {
 import { APP_CONFIG } from '../config/config.module';
 import type { AppConfig } from '../config/configuration';
 import logger from '../common/logger';
+import { MrRepository } from '@/mr/mr.repository';
 
 export interface MergeRequestDto {
-  id: string;
-  /** Path param for /api/merge-requests/:mrId/... — the MR's canonical GitLab URL, base64url-encoded (see jira-mapping.ts). */
-  mrId: string;
-  url: string;
-  author: string;
-  avatarInitial: string;
-  avatarColorVar: string;
-  status: 'REVIEWING' | 'QUEUED' | 'PENDING' | 'BLOCKED';
-  state: string;
-  createdAt: string;
-  lastRun: string;
-  actionLabel: 'Review' | 'Re-review';
+  id: number;
+  mrId: string; // = encodeMrId(gitlabUrl)
+  gitlabUrl: string;
+  gitlabProject: string;
+  gitlabMrIid: number;
+  jiraKey: string | null;
+  jiraTitle: string | null;
+  author: string | null;
+  title: string | null;
+  status: string;
+  reviewStatus: string | null;
+  reviewVerdict: string | null;
+  reviewCompletedAt: string | null;
+  createdAt: string | null;
 }
 
 export interface IssueDto {
@@ -83,6 +85,15 @@ export interface ReviewRunDto {
   errorMessage: string | null;
   createdAt: string;
   completedAt: string | null;
+}
+
+export interface GitlabMr {
+  gitlabUrl: string;
+  gitlabProject: string;
+  gitlabMrIid: number;
+  gitlabState: string;
+  author: string | null;
+  createdAt: string | null;
 }
 
 export interface JiraMeta {
@@ -119,7 +130,9 @@ export class JiraIssuesService extends EventEmitter {
   constructor(
     @Inject(JiraClient) private readonly jiraClient: JiraClient | null,
     @Inject(GitlabClient) private readonly gitlabClient: GitlabClient,
-    @Inject(JiraIssuesRepository) private readonly repo: JiraIssuesRepository,
+    @Inject(JiraIssuesRepository)
+    private readonly issuesRepo: JiraIssuesRepository,
+    @Inject(MrRepository) private readonly mrRepo: MrRepository,
     @Inject(ClaudeClient) private readonly claudeClient: ClaudeClient,
     @Inject(WorkspaceService)
     private readonly workspaceService: WorkspaceService,
@@ -139,7 +152,7 @@ export class JiraIssuesService extends EventEmitter {
       assignee: row.assignee || 'Unassigned',
       avatarInitial: avatarInitial(row.assignee),
       avatarColorVar: avatarColorVar(row.assignee),
-      status: "-", // Will be updated via jira.data.updated
+      status: '-', // Will be updated via jira.data.updated
       updated: row.jiraUpdatedAt ?? '',
       createdAt: row.createdAt,
     };
@@ -159,14 +172,9 @@ export class JiraIssuesService extends EventEmitter {
    * API. Returns null on any GitLab-side failure (private/deleted project,
    * network error, etc.) so callers can just skip that one link.
    */
-  private async resolveGitlabMr(mrUrl: ParsedGitlabMrUrl): Promise<{
-    gitlabUrl: string;
-    gitlabProject: string;
-    gitlabMrIid: number;
-    author: string | null;
-    gitlabState: GitlabMrInfo['state'];
-    createdAt: string | null;
-  } | null> {
+  private async resolveGitlabMr(
+    mrUrl: ParsedGitlabMrUrl,
+  ): Promise<GitlabMr | null> {
     try {
       const mr = await this.gitlabClient.fetchMr({
         gitlabUrl: mrUrl.canonicalUrl,
@@ -198,41 +206,25 @@ export class JiraIssuesService extends EventEmitter {
     }
   }
 
-  /** "Queued"/"Running…"/"Failed 2h ago"/"Approved 40m ago" — never run yet is the caller's "Never run" default. */
-  private describeLastRun(run: JiraReviewRunRow): string {
-    if (run.status === 'queued') return 'Queued';
-    if (run.status === 'running') return 'Running…';
-    const when = formatRelativeTime(run.completedAt || run.createdAt);
-    if (run.status === 'failed') return `Failed ${when}`;
-    return `${run.verdict || 'Reviewed'} ${when}`;
-  }
-
-  private buildMrDto(resolved: {
-    gitlabUrl: string;
-    gitlabProject: string;
-    gitlabMrIid: number;
-    author: string | null;
-    gitlabState: GitlabMrInfo['state'];
-    createdAt: string | null;
-  }): MergeRequestDto {
-    const latest = this.repo.getLatestReviewForUrl(resolved.gitlabUrl);
+  private buildMrDto(resolved: GitlabMr): MergeRequestDto {
+    const latest = this.issuesRepo.getLatestReviewForUrl(resolved.gitlabUrl);
     logger.info(`[buildMrDto] latest: ${JSON.stringify(latest)}`);
 
-    const isReviewing = latest
-      ? latest.status === 'running' || latest.status === 'queued'
-      : false;
     return {
-      id: formatMrId(resolved.gitlabMrIid),
+      id: -1,
       mrId: encodeMrId(resolved.gitlabUrl),
-      url: resolved.gitlabUrl,
+      gitlabUrl: resolved.gitlabUrl,
+      gitlabProject: resolved.gitlabProject,
+      gitlabMrIid: resolved.gitlabMrIid,
+      jiraKey: null,
+      jiraTitle: null,
       author: resolved.author || 'Unknown',
-      avatarInitial: avatarInitial(resolved.author),
-      avatarColorVar: avatarColorVar(resolved.author),
-      status: mapGitlabStateToMrStatus(resolved.gitlabState, isReviewing),
-      state: resolved.gitlabState,
-      createdAt: formatRelativeTime(resolved.createdAt),
-      lastRun: latest ? this.describeLastRun(latest) : 'Never run',
-      actionLabel: latest ? 'Re-review' : 'Review',
+      title: null,
+      status: resolved.gitlabState,
+      reviewStatus: latest?.status ?? null,
+      reviewVerdict: latest?.verdict ?? null,
+      reviewCompletedAt: latest?.completedAt ?? null,
+      createdAt: resolved.createdAt,
     };
   }
 
@@ -243,7 +235,7 @@ export class JiraIssuesService extends EventEmitter {
     const results = await jira.searchIssues(jql);
 
     return results.map((issue) => {
-      const synced = this.repo.getSyncedByKey(issue.key);
+      const synced = this.issuesRepo.getSyncedByKey(issue.key);
       return {
         key: issue.key,
         summary: issue.summary,
@@ -279,12 +271,38 @@ export class JiraIssuesService extends EventEmitter {
       this.config.mr.gitlabAllowedHosts,
     );
 
-    const resolved = await Promise.all(
-      gitlabMrs.map((mrUrl) => this.resolveGitlabMr(mrUrl)),
-    );
-    return resolved
-      .filter((mr): mr is NonNullable<typeof mr> => mr !== null)
-      .map((mr) => this.buildMrDto(mr));
+    const resolved = (
+      await Promise.all(gitlabMrs.map((mrUrl) => this.resolveGitlabMr(mrUrl)))
+    ).filter((mr): mr is NonNullable<typeof mr> => mr !== null);
+
+    setImmediate(() => {
+      const jira = this.issuesRepo.getSyncedByKey(issueKey);
+      if (jira) {
+        resolved.map(
+          ({
+            gitlabUrl,
+            author,
+            createdAt,
+            gitlabMrIid,
+            gitlabProject,
+            gitlabState,
+          }) => {
+            this.mrRepo.upsertMr({
+              gitlabUrl,
+              gitlabProject,
+              gitlabMrIid,
+              jiraKey: issueKey,
+              author,
+              createdAt,
+              title: '',
+              status: gitlabState,
+            });
+          },
+        );
+      }
+    });
+
+    return resolved.map((mr) => this.buildMrDto(mr));
   }
 
   /**
@@ -303,7 +321,7 @@ export class JiraIssuesService extends EventEmitter {
       throw new NotFoundException(`Jira issue "${issueKey}" not found`);
     }
 
-    this.repo.upsertSyncedIssue({
+    this.issuesRepo.upsertSyncedIssue({
       jiraKey: fresh.key,
       summary: fresh.summary,
       labels: null,
@@ -316,26 +334,26 @@ export class JiraIssuesService extends EventEmitter {
       createdAt: fresh.createdAt,
     });
 
-    return this.mapSyncedIssue(this.repo.getSyncedByKey(issueKey)!);
+    return this.mapSyncedIssue(this.issuesRepo.getSyncedByKey(issueKey)!);
   }
 
   async updateIssue(issueKey: string, data: { group?: string }) {
-    const jira = this.repo.getSyncedByKey(issueKey);
+    const jira = this.issuesRepo.getSyncedByKey(issueKey);
     if (!jira) {
       throw new NotFoundException(`Jira issue "${issueKey}" not found`);
     }
 
-    this.repo.upsertSyncedIssue({
+    this.issuesRepo.upsertSyncedIssue({
       ...jira,
       group: data.group ?? null,
     });
 
-    return this.mapSyncedIssue(this.repo.getSyncedByKey(issueKey)!);
+    return this.mapSyncedIssue(this.issuesRepo.getSyncedByKey(issueKey)!);
   }
 
   /** GET /api/synced-issues (BACKEND_SPEC.md §5). */
   listSyncedIssues(query?: GetSyncedIssueQuery): IssueDto[] {
-    const result = this.repo
+    const result = this.issuesRepo
       .listSynced(query)
       .map((row) => this.mapSyncedIssue(row));
     this.getLiveJiraStatus(result);
@@ -359,7 +377,7 @@ export class JiraIssuesService extends EventEmitter {
    * issue can reappear here later via Sync/Add Issue if needed.
    */
   removeSyncedIssue(issueKey: string): void {
-    const removed = this.repo.removeSyncedIssue(issueKey);
+    const removed = this.issuesRepo.removeSyncedIssue(issueKey);
     if (!removed) {
       throw new NotFoundException(`"${issueKey}" is not a synced issue`);
     }
@@ -434,9 +452,9 @@ export class JiraIssuesService extends EventEmitter {
   } {
     const gitlabUrl = decodeMrId(mrId);
     if (!gitlabUrl) throw new NotFoundException('Merge request not found');
-    const rows = this.repo.listReviewsForUrl(gitlabUrl);
+    const rows = this.issuesRepo.listReviewsForUrl(gitlabUrl);
     const latestCompletedReview =
-      this.repo.getLatestCompletedReviewForUrl(gitlabUrl);
+      this.issuesRepo.getLatestCompletedReviewForUrl(gitlabUrl);
     return {
       latest: latestCompletedReview
         ? this.mapReview(latestCompletedReview)
@@ -491,7 +509,7 @@ export class JiraIssuesService extends EventEmitter {
       );
     }
 
-    const queued = this.repo.createReviewQueued(
+    const queued = this.issuesRepo.createReviewQueued(
       gitlabUrl,
       'Claude Review Agent',
     );
@@ -539,7 +557,7 @@ export class JiraIssuesService extends EventEmitter {
       mrId,
       (this.liveConsoleLogs.get(mrId) || '') + chunk,
     );
-    this.repo.appendConsoleLog(reviewId, chunk);
+    this.issuesRepo.appendConsoleLog(reviewId, chunk);
   }
 
   private async _runReview(
@@ -551,7 +569,7 @@ export class JiraIssuesService extends EventEmitter {
     jiraKey: string,
     devFeedback?: string,
   ): Promise<void> {
-    this.repo.setReviewRunning(reviewId);
+    this.issuesRepo.setReviewRunning(reviewId);
     this.emit('jira.review.started', {
       mrId,
       jiraKey,
@@ -607,7 +625,7 @@ export class JiraIssuesService extends EventEmitter {
         );
       }
 
-      const completed = this.repo.completeReview(reviewId, {
+      const completed = this.issuesRepo.completeReview(reviewId, {
         status: parsedResult.value.status,
         verdict: parsedResult.value.verdict,
         summary: parsedResult.value.summary,
@@ -623,7 +641,7 @@ export class JiraIssuesService extends EventEmitter {
       });
     } catch (err: any) {
       logger.error('Jira MR review failed', { mrId, error: err.message });
-      this.repo.failReview(
+      this.issuesRepo.failReview(
         reviewId,
         err.message,
         this.liveConsoleLogs.get(mrId) || '',
@@ -695,7 +713,7 @@ export class JiraIssuesService extends EventEmitter {
       }
       await sleep(totalMs - stepDelayMs * steps.length);
 
-      const completed = this.repo.completeReview(reviewId, {
+      const completed = this.issuesRepo.completeReview(reviewId, {
         status: 'completed',
         verdict: 'Approved',
         summary:
@@ -715,7 +733,7 @@ export class JiraIssuesService extends EventEmitter {
         mrId,
         error: err.message,
       });
-      this.repo.failReview(
+      this.issuesRepo.failReview(
         reviewId,
         err.message,
         this.liveConsoleLogs.get(mrId) || '',

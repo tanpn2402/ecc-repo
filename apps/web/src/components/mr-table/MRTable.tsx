@@ -11,16 +11,27 @@ import { MRDetailDrawer } from "./MRDetailDrawer";
 import { MRReviewDialog } from "./MRReviewDialog";
 import { IconMenuDeep, IconPlayerPlay } from "@tabler/icons-react";
 import MRStatusBadge from "./MRStatusBadge";
+import { compactRelativeTime } from "@/utils/datetime.utils";
 
 export type MRTableProps = {
   jiraKey: string;
 };
 
 export function MRTable({ jiraKey }: MRTableProps) {
-  const [detailMr, setDetailMr] = useState<MergeRequest | null>(null);
-  const [reviewMr, setReviewMr] = useState<MergeRequest | null>(null);
+  const [detailMrId, setDetailMrId] = useState<string | null>(null);
+  const [reviewMrId, setReviewMrId] = useState<string | null>(null);
 
   const issueMrs = useIssueMrs(jiraKey);
+
+  const detailMr = useMemo(
+    () => (issueMrs.data || []).find(({ mrId }) => mrId === detailMrId),
+    [issueMrs.data, detailMrId],
+  );
+
+  const reviewMr = useMemo(
+    () => (issueMrs.data || []).find(({ mrId }) => mrId === reviewMrId),
+    [issueMrs.data, reviewMrId],
+  );
 
   const mrs = useMemo(() => {
     return issueMrs.data || [];
@@ -28,10 +39,10 @@ export function MRTable({ jiraKey }: MRTableProps) {
 
   const columns: MRT_ColumnDef<MergeRequest>[] = [
     {
-      accessorKey: "id",
+      accessorKey: "gitlabMrIid",
       header: "MR",
       size: 100,
-      Cell: ({ cell }) => {
+      Cell: ({ cell, row }) => {
         const mrUrl = cell.getValue<string | null>();
 
         if (!mrUrl) {
@@ -40,12 +51,12 @@ export function MRTable({ jiraKey }: MRTableProps) {
 
         return (
           <Anchor
-            href={`https://gitlab.tx-tech.com/team-csb-r6/winvest-core-fo/-/merge_requests/${mrUrl.replace("!", "")}`}
+            href={row.original.gitlabUrl}
             target="_blank"
             rel="noopener noreferrer"
             size="xs"
           >
-            {mrUrl}
+            !{mrUrl}
           </Anchor>
         );
       },
@@ -61,7 +72,7 @@ export function MRTable({ jiraKey }: MRTableProps) {
       size: 140,
       Cell: ({ cell, row }) => {
         const status = cell.getValue<string>();
-        const gitlabState = row.original.state;
+        const gitlabState = row.original.status;
 
         if (["merged"].includes(gitlabState)) {
           return <MRStatusBadge status="MERGED" />;
@@ -74,24 +85,33 @@ export function MRTable({ jiraKey }: MRTableProps) {
       accessorKey: "createdAt",
       header: "Created",
       size: 160,
+      Cell: ({ cell }) => compactRelativeTime(cell.getValue<string>()),
     },
     {
-      accessorKey: "lastRun",
+      accessorKey: "reviewCompletedAt",
       header: "Last Run",
-      size: 160,
+      size: 200,
+      Cell: ({ row }) => {
+        const { reviewStatus, reviewVerdict, reviewCompletedAt } = row.original;
+        if (reviewStatus === "running") {
+          return "Running...";
+        } else if (reviewStatus === null || reviewStatus.trim().length === 0) {
+          return "";
+        } else {
+          return `${reviewVerdict} ${compactRelativeTime(reviewCompletedAt!)}`;
+        }
+      },
     },
     {
-      accessorKey: "actionLabel",
       header: "Action",
-      size: 260,
-      sortingFn: undefined,
-      Cell: ({ cell, row }) => {
+      size: 220,
+      Cell: ({ row }) => {
         return (
           <Group wrap="nowrap">
             <Button
               size="compact-sm"
               variant="default"
-              onClick={() => setDetailMr(row.original)}
+              onClick={() => setDetailMrId(row.original.mrId)}
               leftSection={<IconMenuDeep size={16} />}
             >
               Detail
@@ -99,7 +119,7 @@ export function MRTable({ jiraKey }: MRTableProps) {
             <Button
               size="compact-sm"
               variant="default"
-              onClick={() => setReviewMr(row.original)}
+              onClick={() => setReviewMrId(row.original.mrId)}
               leftSection={<IconPlayerPlay size={16} />}
             >
               Review
@@ -161,17 +181,15 @@ export function MRTable({ jiraKey }: MRTableProps) {
     <>
       <MantineReactTable table={table} />
       <MRDetailDrawer
-        mr={detailMr}
-        jiraKey={jiraKey}
+        mr={detailMr ?? null}
         opened={!!detailMr}
-        onClose={() => setDetailMr(null)}
+        onClose={() => setDetailMrId(null)}
       />
 
       <MRReviewDialog
-        mr={reviewMr}
-        jiraKey={jiraKey}
+        mr={reviewMr ?? null}
         opened={!!reviewMr}
-        onClose={() => setReviewMr(null)}
+        onClose={() => setReviewMrId(null)}
       />
     </>
   );

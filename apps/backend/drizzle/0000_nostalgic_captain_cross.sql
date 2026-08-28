@@ -29,22 +29,19 @@ CREATE TABLE `merge_requests` (
 	`gitlab_url` text NOT NULL,
 	`gitlab_project` text NOT NULL,
 	`gitlab_mr_iid` integer NOT NULL,
-	`jira_issue_id` integer,
+	`jira_key` text,
 	`author` text,
 	`title` text,
 	`status` text NOT NULL,
-	`error_message` text,
-	`current_review_id` integer,
 	`created_at` text NOT NULL,
-	`updated_at` text NOT NULL,
-	FOREIGN KEY (`jira_issue_id`) REFERENCES `jira_issues`(`id`) ON UPDATE no action ON DELETE set null
+	`updated_at` text NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `merge_requests_gitlab_url_unique` ON `merge_requests` (`gitlab_url`);--> statement-breakpoint
 CREATE UNIQUE INDEX `merge_requests_gitlab_project_gitlab_mr_iid_unique` ON `merge_requests` (`gitlab_project`,`gitlab_mr_iid`);--> statement-breakpoint
 CREATE INDEX `idx_merge_requests_status` ON `merge_requests` (`status`);--> statement-breakpoint
 CREATE INDEX `idx_merge_requests_updated_at` ON `merge_requests` (`updated_at`);--> statement-breakpoint
-CREATE INDEX `idx_merge_requests_jira_issue_id` ON `merge_requests` (`jira_issue_id`);--> statement-breakpoint
+CREATE INDEX `idx_merge_requests_jira_key` ON `merge_requests` (`jira_key`);--> statement-breakpoint
 CREATE TABLE `mr_reviews` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`merge_request_id` integer NOT NULL,

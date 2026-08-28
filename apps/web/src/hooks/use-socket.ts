@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/api/socket.api";
 import { Issue, JiraMrStatus, MergeRequest, ReviewRun } from "@/types";
-import { decodeMrId } from "@/utils/jira.utils";
 import { formatRelativeTime } from "@/utils/datetime.utils";
 import { MrReviews } from "@/api/merge-requests.api";
 
@@ -17,9 +16,6 @@ export function useSocket() {
       (payload) => {
         console.log("[WS] jira.review.started", payload);
 
-        const mrId = decodeMrId(payload.mrId);
-        console.log("[WS] jira.review.started", mrId);
-
         queryClient.setQueryData<MergeRequest[]>(
           ["jira", "issues", payload.jiraKey, "mrs"],
           (mrs) => {
@@ -29,7 +25,7 @@ export function useSocket() {
             }
 
             const updatedMrs = mrs.map((mr) =>
-              mr.url === mrId
+              mr.mrId === payload.mrId
                 ? {
                     ...mr,
                     status: "REVIEWING" as JiraMrStatus,

@@ -28,6 +28,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-ws": "^11.2.1",
     "@nestjs/websockets": "^11.2.1",
+    "@repo/types": "*",
     "better-sqlite3": "^11.10.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
