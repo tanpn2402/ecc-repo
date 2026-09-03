@@ -24,13 +24,38 @@ export class MRService extends EventEmitter {
     const result = await this.mrRepository.listMrs();
 
     if (result.length) {
-      const gitlabMrs = await this.gitlabClient.fetchMrs({
-        gitlabUrl: result[0].gitlabUrl,
-        gitlabProject: result[0].gitlabProject,
-        gitlabMrIids: result.map(({ gitlabMrIid }) => gitlabMrIid),
-      });
+      const gitlabProjectAndUrlSet = result.reduce(
+        (result, mr) => {
+          result.set(mr.gitlabProject, {
+            gitlabUrl: mr.gitlabUrl,
+            gitlabMrIids: (
+              result.get(mr.gitlabProject)?.gitlabMrIids || []
+            ).concat(mr.gitlabMrIid),
+          });
+          return result;
+        },
+        new Map<
+          string,
+          {
+            gitlabUrl: string;
+            gitlabMrIids: Array<number>;
+          }
+        >(),
+      );
 
-      const gitlabMrMap = gitlabMrs.reduce((result, mr) => {
+      const gitlabMrs = await Promise.all(
+        Array.from(gitlabProjectAndUrlSet.entries()).map(
+          async ([gitlabProject, { gitlabUrl, gitlabMrIids }]) => {
+            return this.gitlabClient.fetchMrs({
+              gitlabUrl,
+              gitlabProject,
+              gitlabMrIids,
+            });
+          },
+        ),
+      );
+
+      const gitlabMrMap = gitlabMrs.flat().reduce((result, mr) => {
         result.set(String(mr.iid), mr);
         return result;
       }, new Map<string, GitlabMrInfo>());
