@@ -28,6 +28,7 @@ import { MRTable } from "@/components/mr-table/MRTable";
 import { AddIssueModal } from "@/components/modals/AddIssueModal";
 import { useSearchParams } from "react-router-dom";
 import { compactRelativeTime } from "@/utils/datetime.utils";
+import { useTableQueryState } from "@/hooks/use-table-query-state";
 
 export function Issues() {
   const [opened, setOpened] = useState(false);
@@ -201,6 +202,25 @@ export function Issues() {
     },
   ];
 
+  const {
+    state,
+    setGrouping,
+    setSorting,
+    setColumnFilters,
+    setGlobalFilter,
+    setColumnVisibility,
+    setDensity,
+    setExpanded,
+  } = useTableQueryState({
+    density: "md",
+    grouping: ["group"],
+    columnVisibility: {
+      sprint: false,
+      updated: false,
+    },
+    sorting: [{ id: "createdAt", desc: true }],
+  });
+
   const table = useMantineReactTable({
     columns,
     data: jiraIssues,
@@ -225,25 +245,25 @@ export function Issues() {
     enableExpanding: true,
     enableBottomToolbar: false,
     enablePagination: false,
-    initialState: {
-      density: "md",
-      grouping: ["group"],
-      expanded: {
-        group: true,
-      },
-      columnVisibility: {
-        sprint: false,
-        updated: false,
-      },
-      sorting: [{ id: "createdAt", desc: true }],
-    },
+
     state: {
+      ...state,
       showProgressBars:
         atlassianIssues.isLoading ||
         syncedIssues.isLoading ||
         syncIssue.isPending ||
         removeSyncedIssue.isPending,
     },
+
+    onGroupingChange: setGrouping,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnVisibilityChange: setColumnVisibility,
+    onDensityChange: setDensity,
+    onExpandedChange: setExpanded,
+
+    initialState: {},
     renderRowActionMenuItems: ({ row }) => (
       <>
         <Menu.Label>Assign to group</Menu.Label>

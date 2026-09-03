@@ -14,6 +14,7 @@ import { MRDetailDrawer } from "@/components/mr-table/MRDetailDrawer";
 import { MRReviewDialog } from "@/components/mr-table/MRReviewDialog";
 import MRStatusBadge from "@/components/mr-table/MRStatusBadge";
 import { useMergeRequests } from "@/hooks/use-merge-requests";
+import { useTableQueryState } from "@/hooks/use-table-query-state";
 
 export function MergeRequests() {
   const { data = [], isLoading, error } = useMergeRequests();
@@ -163,10 +164,33 @@ export function MergeRequests() {
     [],
   );
 
+  const {
+    state,
+    setGrouping,
+    setSorting,
+    setColumnFilters,
+    setGlobalFilter,
+    setColumnVisibility,
+    setDensity,
+    setExpanded,
+  } = useTableQueryState({
+    density: "sm",
+    sorting: [
+      {
+        id: "createdAt",
+        desc: true,
+      },
+    ],
+    columnVisibility: {
+      gitlabProject: false,
+    },
+  });
+
   const table = useMantineReactTable({
     columns,
     data,
     state: {
+      ...state,
       isLoading,
     },
     enableColumnFilterModes: false,
@@ -189,19 +213,15 @@ export function MergeRequests() {
     enableBottomToolbar: false,
     enablePagination: false,
 
-    initialState: {
-      density: "sm",
-      sorting: [
-        {
-          id: "createdAt",
-          desc: true,
-        },
-      ],
-      columnVisibility: {
-        gitlabProject: false,
-        updatedAt: false,
-      },
-    },
+    onGroupingChange: setGrouping,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnVisibilityChange: setColumnVisibility,
+    onDensityChange: setDensity,
+    onExpandedChange: setExpanded,
+
+    initialState: {},
   });
 
   return (
