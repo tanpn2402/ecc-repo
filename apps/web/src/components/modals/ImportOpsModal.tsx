@@ -116,14 +116,18 @@ export function ImportOpsModal({
 
     const rows = Array.from(unique.values());
 
-    debugger;
     // Group Jira tasks by date
-    const rowsByDate = new Map<string, GitlabActivity[]>();
+    const rowsByDate = new Map<
+      string,
+      Array<GitlabActivity & { isSelected: boolean }>
+    >();
 
     for (const activity of rows) {
       const dateRows = rowsByDate.get(activity.date) ?? [];
-
-      dateRows.push(activity);
+      dateRows.push({
+        ...activity,
+        isSelected: !!rowSelection[activity.id],
+      });
       rowsByDate.set(activity.date, dateRows);
     }
 
@@ -131,7 +135,9 @@ export function ImportOpsModal({
     const result: OpsImportActivity[] = [];
 
     for (const [, dateRows] of rowsByDate) {
-      const efforts = calculateEfforts(dateRows.length);
+      const efforts = calculateEfforts(
+        dateRows.filter((r) => r.isSelected).length,
+      );
 
       dateRows.forEach((activity, index) => {
         const jiraId = extractJiraId(activity.title)!;
@@ -147,7 +153,7 @@ export function ImportOpsModal({
     }
 
     return result;
-  }, [activities, selectedUserId]);
+  }, [activities, selectedUserId, rowSelection]);
 
   useEffect(() => {
     if (!opsProjects.length) {
@@ -241,7 +247,7 @@ export function ImportOpsModal({
       rowSelection,
     },
 
-    getRowId: (row) => row.jiraId,
+    getRowId: (row) => row.id,
 
     enableColumnActions: false,
     enableColumnFilters: false,
