@@ -62,6 +62,7 @@ export interface IssueDto {
   assignee: string;
   avatarInitial: string;
   avatarColorVar: string;
+  reviewedPassByAI?: boolean;
   status: string;
   updated: string;
   createdAt: string;
@@ -376,7 +377,12 @@ export class JiraIssuesService extends EventEmitter {
     }
     const keys = issues.map((issue) => issue.key).filter(Boolean);
     const data = await this.jiraClient.getIssueData(keys);
-    const result = Object.values(data);
+    const result = Object.values(data).map((issue) => ({
+      ...issue,
+      reviewedPassByAI: issue.labels?.some((label) =>
+        this.config.jiraIssuesPage.reviewedPassByAILabel.includes(label),
+      ),
+    }));
     this.emit('jira.data.updated', result);
   }
 

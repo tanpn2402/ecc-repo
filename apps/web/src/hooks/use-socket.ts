@@ -150,7 +150,12 @@ export function useSocket() {
     });
 
     const unsubscribeJiraStatusUpdated = socket.on<
-      { key: string; status: string }[]
+      {
+        key: string;
+        status: string;
+        reviewedPassByAI?: boolean;
+        labels?: string[];
+      }[]
     >("jira.data.updated", (payload) => {
       console.log("[WS] jira.data.updated", payload);
       const issueDataMap = payload.reduce(
@@ -172,6 +177,8 @@ export function useSocket() {
             ? {
                 ...mr,
                 status: issueDataMap[mr.key].status,
+                reviewedPassByAI: issueDataMap[mr.key].reviewedPassByAI,
+                labels: issueDataMap[mr.key].labels,
               }
             : mr,
         );

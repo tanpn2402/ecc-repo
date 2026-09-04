@@ -53,6 +53,7 @@ export interface AppConfig {
   jiraIssuesPage: {
     jiraProject: string;
     jiraGroups: { id: string; name: string }[];
+    reviewedPassByAILabel: string[];
   };
   gitlabActivities: {
     baseUrl: string;
@@ -304,6 +305,12 @@ function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     jiraIssuesPage: {
       jiraProject: env.JIRA_PROJECT || 'CORE',
       jiraGroups: parseJiraGroups(env.JIRA_GROUPS),
+      reviewedPassByAILabel: String(
+        env.JIRA_REVIEWED_PASS_BY_AI_LABEL || 'CodeReviewedPassByAI',
+      )
+        .split(',')
+        .filter((s) => s.trim().length > 0)
+        .map((s) => s.trim()),
     },
     gitlabActivities: {
       baseUrl: (

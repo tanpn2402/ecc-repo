@@ -31,6 +31,7 @@ export interface JiraSearchIssue {
   status: string;
   updated: string;
   createdAt: string;
+  labels: string[];
 }
 
 export interface JiraRemoteLink {
@@ -103,6 +104,7 @@ export class JiraClient {
         status: fields.status?.name ?? '',
         updated: typeof fields.updated === 'string' ? fields.updated : '',
         createdAt: typeof fields.created === 'string' ? fields.created : '',
+        labels: Array.isArray(fields.labels) ? fields.labels : [],
       };
     });
   }
@@ -120,7 +122,7 @@ export class JiraClient {
       `${this.baseUrl}/rest/api/3/search/jql` +
       `?jql=${encodeURIComponent(jql)}` +
       `&maxResults=${uniqueKeys.length}` +
-      `&fields=status`;
+      `&fields=status,labels`;
 
     const res = await fetch(url, {
       headers: {
@@ -141,6 +143,7 @@ export class JiraClient {
         {
           key: issue.key,
           status: issue.fields?.status?.name ?? '',
+          labels: Array.isArray(issue.fields?.labels) ? issue.fields.labels : [],
         },
       ]),
     );

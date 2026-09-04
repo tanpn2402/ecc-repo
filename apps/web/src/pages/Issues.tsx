@@ -1,13 +1,20 @@
 import { useCallback, useMemo, useState } from "react";
-import { IconPlus } from "@tabler/icons-react";
+import {
+  IconCircleCheck,
+  IconExclamationCircle,
+  IconPlus,
+} from "@tabler/icons-react";
 import {
   Anchor,
   Badge,
   Button,
+  Center,
+  Group,
   Menu,
   ScrollArea,
   Select,
   Skeleton,
+  Tooltip,
 } from "@mantine/core";
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
@@ -179,6 +186,41 @@ export function Issues() {
           <Badge color={color} variant="light">
             {status}
           </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "reviewedPassByAI",
+      header: "Reviewed by AI",
+      size: 100,
+      Cell: ({ cell, row }) => {
+        const reviewedPassByAI = cell.getValue<boolean | undefined>();
+        const labels = row.original.labels;
+        if (reviewedPassByAI === undefined) {
+          return <Skeleton height={16} radius="xl" />;
+        }
+        return (
+          <Tooltip
+            label={
+              labels ? (
+                <Group gap="sm">
+                  {labels.map((label) => (
+                    <Badge key={label} variant="default">
+                      {label}
+                    </Badge>
+                  ))}
+                </Group>
+              ) : undefined
+            }
+          >
+            <Center w="100%">
+              {reviewedPassByAI ? (
+                <IconCircleCheck color="green" />
+              ) : (
+                <IconExclamationCircle color="orange" />
+              )}
+            </Center>
+          </Tooltip>
         );
       },
     },

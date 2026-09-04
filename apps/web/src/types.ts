@@ -88,7 +88,7 @@ export interface MergeRequest {
 export interface Issue {
   key: string;
   summary: string;
-  labels?: string;
+  labels?: string[];
   priority: Priority;
   sprint: string;
   group: string;
@@ -97,6 +97,7 @@ export interface Issue {
   avatarColorVar: string;
   status: string;
   updated: string;
+  reviewedPassByAI?: boolean;
   // No `mrs` field — GET /api/jira/issues and /api/synced-issues never embed
   // MR data. Fetch it on-demand per issue via GET /api/jira/issues/:key/mrs
   // (see hooks/useJiraIssuesData.ts's useIssueMrs), on row expand.
