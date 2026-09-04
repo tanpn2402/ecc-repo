@@ -165,8 +165,8 @@ export function ImportOpsModal({
       const next = { ...current };
 
       for (const row of data) {
-        if (!next[row.jiraId]) {
-          next[row.jiraId] = opsProjects[0];
+        if (!next[row.id]) {
+          next[row.id] = opsProjects[0];
         }
       }
 
@@ -192,14 +192,14 @@ export function ImportOpsModal({
       {
         id: "opsProject",
         header: "OPS Project",
-        size: 220,
+        size: 120,
         Cell: ({ row }) => {
-          const jiraId = row.original.jiraId;
+          const id = row.original.id;
 
           return (
             <Select
               data={opsProjectOptions}
-              value={projectByJira[jiraId]?.optId ?? null}
+              value={projectByJira[id]?.optId ?? null}
               onChange={(value) => {
                 if (!value) {
                   return;
@@ -207,7 +207,7 @@ export function ImportOpsModal({
 
                 setProjectByJira((current) => ({
                   ...current,
-                  [jiraId]: value ? opsProjectMap[value] : null,
+                  [id]: value ? opsProjectMap[value] : null,
                 }));
               }}
               placeholder="Select project"
@@ -276,8 +276,8 @@ export function ImportOpsModal({
     const activities = selectedActivities.map<OpsImportActivity>((activity) => {
       return {
         ...activity,
-        opsProjectOptId: projectByJira[activity.jiraId]?.optId ?? null,
-        opsProjectValueId: projectByJira[activity.jiraId]?.valueId ?? null,
+        opsProjectOptId: projectByJira[activity.id]?.optId ?? null,
+        opsProjectValueId: projectByJira[activity.id]?.valueId ?? null,
       };
     });
     const script = getOpsScript(activities, { isAutoSubmit: false });
