@@ -139,13 +139,14 @@ export function ImportOpsModal({
         dateRows.filter((r) => r.isSelected).length,
       );
 
-      dateRows.forEach((activity, index) => {
+      let index = 0;
+      dateRows.forEach((activity) => {
         const jiraId = extractJiraId(activity.title)!;
 
         result.push({
           ...activity,
           jiraId,
-          effort: efforts[index],
+          effort: activity.isSelected ? efforts[index++] : 0,
           opsProjectValueId: opsProjects[0]?.valueId ?? null,
           opsProjectOptId: opsProjects[0]?.optId ?? null,
         });
