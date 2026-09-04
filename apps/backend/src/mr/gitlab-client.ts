@@ -3,7 +3,7 @@
 // asks it to touch the GitLab API itself, so a review Skill that also calls
 // GitLab internally can never cause this data to be fetched twice.
 
-import logger from "@/common/logger";
+import logger from '@/common/logger';
 
 export interface FetchMrMetadataParams {
   gitlabUrl: string;
@@ -22,10 +22,13 @@ export interface GitlabMrInfo {
   title: string;
   author: string;
   authorId: number;
+  authorName?: string;
   description: string;
   sourceBranch: string;
   targetBranch: string;
   createdAt: string | null;
+  reviewers?: Array<{ id: number; name: string }>;
+  assignees?: Array<{ id: number; name: string }>;
   state: string; // opened | merged | closed
 }
 
@@ -65,17 +68,33 @@ export class GitlabClient {
     this.token = token;
   }
 
-  private mapMr(body: any) {
+  private mapMr(body: any): GitlabMrInfo {
+    const assignees = Array.isArray(body.assignees)
+      ? body.assignees.map((assignee) => ({
+          id: assignee.id,
+          name: assignee.name,
+        }))
+      : [];
+    const reviewers = Array.isArray(body.reviewers)
+      ? body.reviewers.map((reviewer) => ({
+          id: reviewer.id,
+          name: reviewer.name,
+        }))
+      : [];
+    // prettier-ignore
     return {
       iid: typeof body.iid === 'number' ? body.iid : -1,
       title: typeof body.title === 'string' ? body.title : '',
       author: body.author && typeof body.author.username === 'string' ? body.author.username : '',
       authorId: body.author && typeof body.author.id === 'number' ? body.author.id : -1,
+      authorName: body.author && typeof body.author.name === 'string' ? body.author.name : '',
       description: typeof body.description === 'string' ? body.description : '',
       sourceBranch: typeof body.source_branch === 'string' ? body.source_branch : '',
       targetBranch: typeof body.target_branch === 'string' ? body.target_branch : '',
       createdAt: typeof body.created_at === 'string' ? body.created_at : null,
       state: typeof body.state === 'string' ? body.state : 'opened',
+      assignees,
+      reviewers,
     };
   }
 
@@ -87,21 +106,27 @@ export class GitlabClient {
    * jira-issues.service.ts/jira-mapping.ts, this just surfaces the raw
    * GitLab state. Throws on any non-2xx response or network failure.
    */
-  async fetchMr({ gitlabUrl, gitlabProject, gitlabMrIid }: FetchMrMetadataParams): Promise<GitlabMrInfo> {
+  async fetchMr({
+    gitlabUrl,
+    gitlabProject,
+    gitlabMrIid,
+  }: FetchMrMetadataParams): Promise<GitlabMrInfo> {
     const host = new URL(gitlabUrl).host;
     const projectId = encodeURIComponent(gitlabProject);
     const url = `https://${host}/api/v4/projects/${projectId}/merge_requests/${gitlabMrIid}`;
 
-    logger.info("Fetching GitLab MR data", { gitlabUrl, url });
+    logger.info('Fetching GitLab MR data', { gitlabUrl, url });
 
     const res = await fetch(url, {
       headers: this.token ? { 'PRIVATE-TOKEN': this.token } : {},
     });
     if (!res.ok) {
-      throw new Error(`GitLab API returned ${res.status} for ${gitlabProject}!${gitlabMrIid}`);
+      throw new Error(
+        `GitLab API returned ${res.status} for ${gitlabProject}!${gitlabMrIid}`,
+      );
     }
     const body: any = await res.json();
-    logger.info("Fetched GitLab MR data", { body });
+    logger.info('Fetched GitLab MR data', { body });
 
     return this.mapMr(body);
   }
@@ -164,7 +189,12 @@ export class GitlabClient {
    * user + wide date range could otherwise page forever. Throws on any
    * non-2xx response, same as fetchMr.
    */
-  async fetchUserEvents({ baseUrl, userId, after, before }: FetchUserEventsParams): Promise<GitlabRawEvent[]> {
+  async fetchUserEvents({
+    baseUrl,
+    userId,
+    after,
+    before,
+  }: FetchUserEventsParams): Promise<GitlabRawEvent[]> {
     const host = new URL(baseUrl).host;
     const events: GitlabRawEvent[] = [];
 
@@ -179,7 +209,9 @@ export class GitlabClient {
         headers: this.token ? { 'PRIVATE-TOKEN': this.token } : {},
       });
       if (!res.ok) {
-        throw new Error(`GitLab API returned ${res.status} for user ${userId} events`);
+        throw new Error(
+          `GitLab API returned ${res.status} for user ${userId} events`,
+        );
       }
       const body: any = await res.json();
       const pageEvents: GitlabRawEvent[] = Array.isArray(body) ? body : [];
@@ -187,7 +219,12 @@ export class GitlabClient {
 
       if (pageEvents.length < EVENTS_PER_PAGE) break;
       if (page === EVENTS_MAX_PAGES) {
-        logger.warn('GitLab events pagination cap reached', { userId, page, after, before });
+        logger.warn('GitLab events pagination cap reached', {
+          userId,
+          page,
+          after,
+          before,
+        });
       }
     }
 

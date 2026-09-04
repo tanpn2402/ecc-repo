@@ -215,9 +215,9 @@ export function Issues() {
           >
             <Center w="100%">
               {reviewedPassByAI ? (
-                <IconCircleCheck color="green" />
+                <IconCircleCheck size={20} color="green" />
               ) : (
-                <IconExclamationCircle color="orange" />
+                <IconExclamationCircle size={20} color="orange" />
               )}
             </Center>
           </Tooltip>

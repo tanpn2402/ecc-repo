@@ -3,6 +3,7 @@ import { WebSocketGateway, WebSocketServer, OnGatewayConnection } from '@nestjs/
 import type { Server as WsServerType, WebSocket as WsClientType } from 'ws';
 import { JiraIssuesService } from '../jira-issues/jira-issues.service';
 import logger from '../common/logger';
+import { MRService } from '@/mr/mr.service';
 
 /**
  * Port of ws/ws-server.js's MrWebSocketServer as a NestJS WebSocketGateway.
@@ -27,7 +28,8 @@ export class MrGateway implements OnModuleInit, OnModuleDestroy, OnGatewayConnec
   @WebSocketServer() server!: WsServerType;
 
   constructor(
-    @Inject(JiraIssuesService) private readonly jiraIssuesService: JiraIssuesService
+    @Inject(JiraIssuesService) private readonly jiraIssuesService: JiraIssuesService,
+    @Inject(MRService) private readonly mrService: MRService
   ) {}
 
   /**
@@ -71,6 +73,10 @@ export class MrGateway implements OnModuleInit, OnModuleDestroy, OnGatewayConnec
     this.jiraIssuesService.on('jira.review.completed', forward('jira.review.completed'));
     this.jiraIssuesService.on('jira.review.failed', forward('jira.review.failed'));
     this.jiraIssuesService.on('jira.data.updated', forward('jira.data.updated'));
+
+    // MRService's live MR data (see mr.service.ts).
+    this.mrService.on('mr.data.updated', forward('mr.data.updated'));
+
     logger.debug('WebSocket MR event forwarding wired up');
   }
 

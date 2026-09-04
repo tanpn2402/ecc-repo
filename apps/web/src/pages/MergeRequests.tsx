@@ -1,6 +1,6 @@
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
-import { Anchor, Button, Group, Stack, Text } from "@mantine/core";
+import { Anchor, Button, Center, Group, Skeleton, Text } from "@mantine/core";
 import { useMemo, useState } from "react";
 import {
   MantineReactTable,
@@ -9,7 +9,12 @@ import {
 } from "@repo/mantine-table";
 import { MergeRequest } from "@/types";
 import { compactRelativeTime } from "@/utils/datetime.utils";
-import { IconMenuDeep, IconPlayerPlay } from "@tabler/icons-react";
+import {
+  IconCircleCheck,
+  IconExclamationCircle,
+  IconMenuDeep,
+  IconPlayerPlay,
+} from "@tabler/icons-react";
 import { MRDetailDrawer } from "@/components/mr-table/MRDetailDrawer";
 import { MRReviewDialog } from "@/components/mr-table/MRReviewDialog";
 import MRStatusBadge from "@/components/badges/MRStatusBadge";
@@ -123,7 +128,26 @@ export function MergeRequests() {
           );
         },
       },
-
+      {
+        accessorKey: "assignedToManager",
+        header: "Assigned to Manager",
+        size: 150,
+        Cell: ({ cell }) => {
+          const assignedToManager = cell.getValue<boolean | undefined>();
+          if (assignedToManager === undefined) {
+            return <Skeleton height={16} radius="xl" />;
+          }
+          return (
+            <Center w="100%">
+              {assignedToManager ? (
+                <IconCircleCheck size={20} color="green" />
+              ) : (
+                <IconExclamationCircle size={20} color="orange" />
+              )}
+            </Center>
+          );
+        },
+      },
       {
         accessorKey: "createdAt",
         header: "Created At",

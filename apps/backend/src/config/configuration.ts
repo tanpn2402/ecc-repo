@@ -59,6 +59,7 @@ export interface AppConfig {
     baseUrl: string;
     users: { id: number; name: string }[];
     activityTypes: { key: string; label: string }[];
+    assignedToManagerIds: number[];
   };
   ops: {
     projects: { optId: string; valueId: string; name: string }[];
@@ -319,6 +320,19 @@ function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       ).replace(/\/+$/, ''),
       users: parseGitlabActivityUsers(env.GITLAB_ACTIVITY_USERS),
       activityTypes: parseGitlabActivityTypes(env.GITLAB_ACTIVITY_TYPES),
+      assignedToManagerIds: String(env.GITLAB_ASSIGNED_TO_MANAGER_IDS || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => {
+          const n = Number(s);
+          if (!Number.isInteger(n)) {
+            throw new Error(
+              `GITLAB_ASSIGNED_TO_MANAGER_IDS contains a non-numeric id: "${s}"`,
+            );
+          }
+          return n;
+        }),
     },
     ops: {
       projects: parseOpsGroups(env.OPS_PROJECTS),

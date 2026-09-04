@@ -78,6 +78,9 @@ export interface MergeRequest {
   jiraTitle: string | null;
   author: string | null;
   title: string | null;
+  assignees?: Array<{ id: number; name: string }>;
+  reviewers?: Array<{ id: number; name: string }>;
+  assignedToManager?: boolean;
   status: string;
   reviewStatus: string | null;
   reviewVerdict: string | null;

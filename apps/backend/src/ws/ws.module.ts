@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JiraIssuesModule } from '../jira-issues/jira-issues.module';
 import { MrGateway } from './mr.gateway';
+import { MrModule } from '@/mr/mr.module';
 
 /**
  * Only imported by AppModule when config.websocket.enabled is true (see
@@ -9,7 +10,7 @@ import { MrGateway } from './mr.gateway';
  * rather than accepting-then-ignoring connections.
  */
 @Module({
-  imports: [JiraIssuesModule],
+  imports: [JiraIssuesModule, MrModule],
   providers: [MrGateway],
 })
 export class WsModule {}

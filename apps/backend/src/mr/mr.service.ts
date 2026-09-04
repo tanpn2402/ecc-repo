@@ -8,16 +8,12 @@ import GitlabClient, { GitlabMrInfo } from './gitlab-client';
 
 @Injectable()
 export class MRService extends EventEmitter {
-  private gitlabUserMap: Map<string, string> = new Map();
   constructor(
     @Inject(APP_CONFIG) private readonly config: AppConfig,
     @Inject(MrRepository) private readonly mrRepository: MrRepository,
     @Inject(GitlabClient) private readonly gitlabClient: GitlabClient,
   ) {
     super();
-    config.gitlabActivities.users.forEach((user) => {
-      this.gitlabUserMap.set(String(user.id), user.name);
-    });
   }
 
   public async listMrs() {
@@ -43,24 +39,26 @@ export class MRService extends EventEmitter {
         >(),
       );
 
-      const gitlabMrs = await Promise.all(
-        Array.from(gitlabProjectAndUrlSet.entries()).map(
-          async ([gitlabProject, { gitlabUrl, gitlabMrIids }]) => {
-            return this.gitlabClient.fetchMrs({
-              gitlabUrl,
-              gitlabProject,
-              gitlabMrIids,
-            });
-          },
-        ),
-      );
+      const gitlabMrs = (
+        await Promise.all(
+          Array.from(gitlabProjectAndUrlSet.entries()).map(
+            async ([gitlabProject, { gitlabUrl, gitlabMrIids }]) => {
+              return this.gitlabClient.fetchMrs({
+                gitlabUrl,
+                gitlabProject,
+                gitlabMrIids,
+              });
+            },
+          ),
+        )
+      ).flat();
 
-      const gitlabMrMap = gitlabMrs.flat().reduce((result, mr) => {
+      const gitlabMrMap = gitlabMrs.reduce((result, mr) => {
         result.set(String(mr.iid), mr);
         return result;
       }, new Map<string, GitlabMrInfo>());
 
-      return result.map((mr) => {
+      const data = result.map((mr) => {
         const gitlabMr = gitlabMrMap.get(String(mr.gitlabMrIid));
 
         if (gitlabMr) {
@@ -78,12 +76,20 @@ export class MRService extends EventEmitter {
             ...mr,
             mrId: encodeMrId(mr.gitlabUrl),
             status: gitlabMr.state,
-            author:
-              (gitlabMr.authorId
-                ? this.gitlabUserMap.get(String(gitlabMr.authorId))
-                : mr.author) ||
-              mr.author ||
-              'Unknown',
+            author: gitlabMr.authorName || 'Unknown',
+            assignees: gitlabMr.assignees || [],
+            reviewers: gitlabMr.reviewers || [],
+            assignedToManager:
+              (gitlabMr.assignees || []).some((assignee) =>
+                this.config.gitlabActivities.assignedToManagerIds.includes(
+                  assignee.id,
+                ),
+              ) &&
+              (gitlabMr.reviewers || []).some((reviewer) =>
+                this.config.gitlabActivities.assignedToManagerIds.includes(
+                  reviewer.id,
+                ),
+              ),
           };
         }
 
@@ -92,6 +98,10 @@ export class MRService extends EventEmitter {
           mrId: encodeMrId(mr.gitlabUrl),
         };
       });
+
+      this.emit('mr.data.updated', gitlabMrs);
+
+      return data;
     }
 
     return result;

@@ -7,6 +7,6 @@ import { MRService } from './mr.service';
 @Module({
   controllers: [MrController],
   providers: [MrRepository, MRService],
-  exports: [MrRepository],
+  exports: [MrRepository, MRService],
 })
 export class MrModule {}
