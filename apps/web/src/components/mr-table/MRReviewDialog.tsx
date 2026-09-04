@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
+  Anchor,
   Button,
   Group,
   Modal,
@@ -73,11 +74,33 @@ export function MRReviewDialog({ mr, opened, onClose }: MRReviewDialogProps) {
     <Modal
       opened={opened}
       onClose={onClose}
-      title={`Review ${mr?.id ?? ""}`}
+      title={
+        <Text>
+          Review{" "}
+          <Anchor
+            href={mr?.gitlabUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            !{mr?.gitlabMrIid}
+          </Anchor>
+        </Text>
+      }
       centered
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack gap="md">
+          <Text>
+            <Anchor
+              href={`https://tx-tech.atlassian.net/browse/${mr?.jiraKey}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {mr?.jiraKey}
+            </Anchor>{" "}
+            {mr?.jiraTitle}
+          </Text>
+
           <Text size="sm" c="dimmed">
             Select the workspace where Claude Code should run the review.
           </Text>

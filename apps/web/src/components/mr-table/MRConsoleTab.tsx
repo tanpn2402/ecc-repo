@@ -37,9 +37,10 @@ export function ConsoleTab({ review }: ConsoleTabProps) {
         overflow: "hidden",
         background: "var(--mantine-color-dark-8)",
       }}
+      h="100%"
     >
       <ScrollArea
-        h="calc(100vh - 260px)"
+        h="100%"
         viewportRef={viewportRef}
         onScrollPositionChange={handleScroll}
         type="auto"
@@ -91,7 +92,7 @@ export function ConsoleTab({ review }: ConsoleTabProps) {
                     borderRadius: 4,
                     overflowX: "auto",
                     whiteSpace: "break-spaces",
-                    wordBreak: "break-all",
+                    wordBreak: "keep-all",
                   }}
                 >
                   {children}

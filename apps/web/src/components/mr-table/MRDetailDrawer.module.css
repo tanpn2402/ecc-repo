@@ -1,0 +1,26 @@
+.resizeHandle {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  z-index: 1000;
+
+  background: var(--mantine-color-dark-4);
+  transition: background-color 120ms ease;
+}
+
+.resizeHandle:hover {
+  background: var(--mantine-color-dark-5);
+}
+
+.drawerContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.drawerBody {
+  flex: 1;
+  overflow: hidden;
+}

@@ -16,6 +16,7 @@ export interface TableQueryState {
   columnVisibility: MRT_VisibilityState;
   density: MRT_DensityState;
   expanded: MRT_ExpandedState;
+  isFullScreen: boolean;
 }
 
 const DEFAULT_STATE: TableQueryState = {
@@ -26,6 +27,7 @@ const DEFAULT_STATE: TableQueryState = {
   columnVisibility: {},
   density: "md",
   expanded: {},
+  isFullScreen: false,
 };
 
 const QUERY_KEYS: Record<keyof TableQueryState, string> = {
@@ -36,6 +38,7 @@ const QUERY_KEYS: Record<keyof TableQueryState, string> = {
   columnVisibility: "hidden-columns",
   density: "density",
   expanded: "expanded",
+  isFullScreen: "fs",
 };
 
 function parseJson<T>(value: string | null, fallback: T): T {
@@ -122,6 +125,8 @@ export function useTableQueryState(defaults: Partial<TableQueryState> = {}) {
       searchParams.get(QUERY_KEYS.expanded),
       defaultState.expanded,
     ),
+
+    isFullScreen: searchParams.get(QUERY_KEYS.isFullScreen) === "true",
   };
 
   const update = <K extends keyof TableQueryState>(
@@ -173,6 +178,18 @@ export function useTableQueryState(defaults: Partial<TableQueryState> = {}) {
             break;
           }
 
+          case "isFullScreen": {
+            const fullscreen = value as boolean;
+
+            if (fullscreen) {
+              next.set(queryKey, "true");
+            } else {
+              next.delete(queryKey);
+            }
+
+            break;
+          }
+
           default: {
             // IMPORTANT:
             //
@@ -221,6 +238,7 @@ export function useTableQueryState(defaults: Partial<TableQueryState> = {}) {
   const setColumnVisibility = createSetter("columnVisibility");
   const setDensity = createSetter("density");
   const setExpanded = createSetter("expanded");
+  const setIsFullScreen = createSetter("isFullScreen");
 
   return {
     state,
@@ -232,5 +250,6 @@ export function useTableQueryState(defaults: Partial<TableQueryState> = {}) {
     setColumnVisibility,
     setDensity,
     setExpanded,
+    setIsFullScreen,
   };
 }

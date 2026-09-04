@@ -1,6 +1,6 @@
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
-import { Anchor, Button, Group, Text } from "@mantine/core";
+import { Anchor, Button, Group, Stack, Text } from "@mantine/core";
 import { useMemo, useState } from "react";
 import {
   MantineReactTable,
@@ -12,9 +12,10 @@ import { compactRelativeTime } from "@/utils/datetime.utils";
 import { IconMenuDeep, IconPlayerPlay } from "@tabler/icons-react";
 import { MRDetailDrawer } from "@/components/mr-table/MRDetailDrawer";
 import { MRReviewDialog } from "@/components/mr-table/MRReviewDialog";
-import MRStatusBadge from "@/components/mr-table/MRStatusBadge";
+import MRStatusBadge from "@/components/badges/MRStatusBadge";
 import { useMergeRequests } from "@/hooks/use-merge-requests";
 import { useTableQueryState } from "@/hooks/use-table-query-state";
+import ReviewStatusBadge from "@/components/badges/ReviewStatusBadge";
 
 export function MergeRequests() {
   const { data = [], isLoading, error } = useMergeRequests();
@@ -86,7 +87,7 @@ export function MergeRequests() {
         header: "Author",
         size: 150,
         Cell: ({ cell }) => (
-          <Text>{cell.getValue<string | null>() || "-"}</Text>
+          <Text size="sm">{cell.getValue<string | null>() || "-"}</Text>
         ),
       },
 
@@ -113,16 +114,13 @@ export function MergeRequests() {
         Cell: ({ row }) => {
           const { reviewStatus, reviewVerdict, reviewCompletedAt } =
             row.original;
-          if (reviewStatus === "running") {
-            return "Running...";
-          } else if (
-            reviewStatus === null ||
-            reviewStatus.trim().length === 0
-          ) {
-            return "";
-          } else {
-            return `${reviewVerdict} ${compactRelativeTime(reviewCompletedAt!)}`;
-          }
+          return (
+            <ReviewStatusBadge
+              status={reviewStatus}
+              verdict={reviewVerdict}
+              completedAt={reviewCompletedAt}
+            />
+          );
         },
       },
 
@@ -173,6 +171,7 @@ export function MergeRequests() {
     setColumnVisibility,
     setDensity,
     setExpanded,
+    setIsFullScreen,
   } = useTableQueryState({
     density: "sm",
     sorting: [
@@ -220,6 +219,7 @@ export function MergeRequests() {
     onColumnVisibilityChange: setColumnVisibility,
     onDensityChange: setDensity,
     onExpandedChange: setExpanded,
+    onIsFullScreenChange: setIsFullScreen,
 
     initialState: {},
   });

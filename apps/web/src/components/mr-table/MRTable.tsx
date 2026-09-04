@@ -10,8 +10,9 @@ import { Anchor, Button, Center, Group, Text } from "@mantine/core";
 import { MRDetailDrawer } from "./MRDetailDrawer";
 import { MRReviewDialog } from "./MRReviewDialog";
 import { IconMenuDeep, IconPlayerPlay } from "@tabler/icons-react";
-import MRStatusBadge from "./MRStatusBadge";
+import MRStatusBadge from "../badges/MRStatusBadge";
 import { compactRelativeTime } from "@/utils/datetime.utils";
+import ReviewStatusBadge from "../badges/ReviewStatusBadge";
 
 export type MRTableProps = {
   jiraKey: string;
@@ -90,16 +91,16 @@ export function MRTable({ jiraKey }: MRTableProps) {
     {
       accessorKey: "reviewCompletedAt",
       header: "Last Run",
-      size: 200,
+      size: 250,
       Cell: ({ row }) => {
         const { reviewStatus, reviewVerdict, reviewCompletedAt } = row.original;
-        if (reviewStatus === "running") {
-          return "Running...";
-        } else if (reviewStatus === null || reviewStatus.trim().length === 0) {
-          return "";
-        } else {
-          return `${reviewVerdict} ${compactRelativeTime(reviewCompletedAt!)}`;
-        }
+        return (
+          <ReviewStatusBadge
+            status={reviewStatus}
+            verdict={reviewVerdict}
+            completedAt={reviewCompletedAt}
+          />
+        );
       },
     },
     {

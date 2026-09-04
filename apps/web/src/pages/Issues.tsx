@@ -211,6 +211,7 @@ export function Issues() {
     setColumnVisibility,
     setDensity,
     setExpanded,
+    setIsFullScreen,
   } = useTableQueryState({
     density: "md",
     grouping: ["group"],
@@ -262,6 +263,7 @@ export function Issues() {
     onColumnVisibilityChange: setColumnVisibility,
     onDensityChange: setDensity,
     onExpandedChange: setExpanded,
+    onIsFullScreenChange: setIsFullScreen,
 
     initialState: {},
     renderRowActionMenuItems: ({ row }) => (

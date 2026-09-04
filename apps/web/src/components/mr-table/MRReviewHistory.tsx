@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { Badge, Center, Stack, Text } from "@mantine/core";
+import { Badge, Center, ScrollArea, Stack, Text } from "@mantine/core";
 
 import {
   MantineReactTable,
@@ -18,7 +18,9 @@ type ReviewHistoryProps = {
 };
 
 function ReviewStatus({ status }: { status: string }) {
-  return <Badge variant={status === "running" ? "dot" : "light"}>{status}</Badge>;
+  return (
+    <Badge variant={status === "running" ? "dot" : "light"}>{status}</Badge>
+  );
 }
 
 export function MRReviewHistory({ history }: ReviewHistoryProps) {
@@ -77,10 +79,10 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
     renderDetailPanel:
       history.length > 0
         ? ({ row }) => (
-          <Stack p="md">
-            <MRReviewDetail review={row.original} />
-          </Stack>
-        )
+            <Stack p="md">
+              <MRReviewDetail review={row.original} />
+            </Stack>
+          )
         : undefined,
 
     renderEmptyRowsFallback: () => (
@@ -96,5 +98,9 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
     },
   });
 
-  return <MantineReactTable table={table} />;
+  return (
+    <ScrollArea h="100%" type="auto">
+      <MantineReactTable table={table} />
+    </ScrollArea>
+  );
 }
