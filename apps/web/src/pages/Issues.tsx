@@ -127,6 +127,7 @@ export function Issues() {
       accessorKey: "key",
       header: "Key",
       size: 120,
+      filterVariant: "multi-select",
       Cell: ({ cell }) => {
         const jiraId = cell.getValue<string | null>();
 
@@ -160,16 +161,19 @@ export function Issues() {
       accessorKey: "sprint",
       header: "Sprint",
       size: 280,
+      filterVariant: "multi-select",
     },
     {
       accessorKey: "assignee",
       header: "Assignee",
       size: 180,
+      filterVariant: "multi-select",
     },
     {
       accessorKey: "status",
       header: "Status",
       size: 180,
+      filterVariant: "multi-select",
       Cell: ({ cell }) => {
         const status = cell.getValue<string>();
         if (status === "-") {
@@ -240,6 +244,7 @@ export function Issues() {
       accessorKey: "group",
       header: "Group",
       size: 150,
+      filterVariant: "multi-select",
       Cell: ({ row }) => groupMap[row.original.group] || row.original.group,
     },
   ];
@@ -270,7 +275,7 @@ export function Issues() {
     enableColumnFilterModes: false,
     enableColumnOrdering: true,
     enableFacetedValues: true,
-    enableFilters: false,
+    enableFilters: true,
     enableDensityToggle: false,
     enableColumnFilters: true,
     columnFilterDisplayMode: "popover",
@@ -288,6 +293,7 @@ export function Issues() {
     enableExpanding: true,
     enableBottomToolbar: false,
     enablePagination: false,
+    enableGlobalFilter: true,
 
     state: {
       ...state,
