@@ -20,7 +20,13 @@ import { MergeRequests } from "./pages/MergeRequests";
 
 const store = createStore();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 30 * 60 * 1000,
+    },
+  },
+});
 
 const myColor: MantineColorsTuple = [
   "#e6ffee",

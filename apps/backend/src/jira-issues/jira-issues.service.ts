@@ -152,7 +152,8 @@ export class JiraIssuesService extends EventEmitter {
       assignee: row.assignee || 'Unassigned',
       avatarInitial: avatarInitial(row.assignee),
       avatarColorVar: avatarColorVar(row.assignee),
-      status: '-', // Will be updated via jira.data.updated
+      status: row.status,
+      reviewedPassByAI: row.reviewedPassByAI,
       updated: row.jiraUpdatedAt ?? '',
       createdAt: row.createdAt,
     };
@@ -356,27 +357,34 @@ export class JiraIssuesService extends EventEmitter {
   }
 
   /** GET /api/synced-issues (BACKEND_SPEC.md §5). */
-  listSyncedIssues(query?: GetSyncedIssueQuery): IssueDto[] {
-    const result = this.issuesRepo
-      .listSynced(query)
-      .map((row) => this.mapSyncedIssue(row));
-    this.getLiveJiraStatus(result);
-    return result;
-  }
+  async listSyncedIssues(query?: GetSyncedIssueQuery): Promise<IssueDto[]> {
+    const syncedIssue = this.issuesRepo.listSynced(query);
 
-  async getLiveJiraStatus(issues: IssueDto[]) {
-    if (!this.jiraClient || !issues.length) {
-      return;
+    if (this.jiraClient && syncedIssue.length) {
+      const keys = syncedIssue.map((issue) => issue.jiraKey).filter(Boolean);
+      const data = await this.jiraClient.getIssueData(keys);
+
+      const updatedIssues = syncedIssue.map((issue) => {
+        if (data[issue.jiraKey]) {
+          return {
+            ...issue,
+            status: data[issue.jiraKey].status || issue.status,
+            reviewedPassByAI: data[issue.jiraKey].labels?.some((label) =>
+              this.config.jiraIssuesPage.reviewedPassByAILabel.includes(label),
+            ),
+          };
+        }
+        return {
+          ...issue,
+          reviewedPassByAI: false,
+        };
+      });
+
+      return updatedIssues.map((row) => this.mapSyncedIssue(row));
+      // this.emit('jira.data.updated', issues);
     }
-    const keys = issues.map((issue) => issue.key).filter(Boolean);
-    const data = await this.jiraClient.getIssueData(keys);
-    const result = Object.values(data).map((issue) => ({
-      ...issue,
-      reviewedPassByAI: issue.labels?.some((label) =>
-        this.config.jiraIssuesPage.reviewedPassByAILabel.includes(label),
-      ),
-    }));
-    this.emit('jira.data.updated', result);
+
+    return syncedIssue.map((row) => this.mapSyncedIssue(row));
   }
 
   /**

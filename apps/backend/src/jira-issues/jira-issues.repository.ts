@@ -1,10 +1,12 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { eq, desc, sql } from "drizzle-orm";
-import { DRIZZLE_DB, type DrizzleDb } from "@/db/database.provider";
-import { jiraIssuesSynced, jiraReviewRuns } from "@/db/schema";
-import { GetSyncedIssueQuery } from "./jira-issues.service";
+import { Inject, Injectable } from '@nestjs/common';
+import { eq, desc, sql } from 'drizzle-orm';
+import { DRIZZLE_DB, type DrizzleDb } from '@/db/database.provider';
+import { jiraIssuesSynced, jiraReviewRuns } from '@/db/schema';
+import { GetSyncedIssueQuery } from './jira-issues.service';
 
-export type JiraIssueSyncedRow = typeof jiraIssuesSynced.$inferSelect;
+export type JiraIssueSyncedRow = typeof jiraIssuesSynced.$inferSelect & {
+  reviewedPassByAI?: boolean;
+};
 export type JiraReviewRunRow = typeof jiraReviewRuns.$inferSelect;
 
 export interface UpsertSyncedIssueInput {
@@ -55,7 +57,7 @@ export class JiraIssuesRepository {
     const condition = query?.group
       ? eq(jiraIssuesSynced.group, query.group)
       : undefined;
-      
+
     return this.db
       .select()
       .from(jiraIssuesSynced)
@@ -96,7 +98,7 @@ export class JiraIssuesRepository {
     const now = new Date().toISOString();
     const info = this.db
       .insert(jiraReviewRuns)
-      .values({ gitlabUrl, status: "queued", execBy, createdAt: now })
+      .values({ gitlabUrl, status: 'queued', execBy, createdAt: now })
       .run();
     return this.getReviewById(Number(info.lastInsertRowid))!;
   }
@@ -115,7 +117,7 @@ export class JiraIssuesRepository {
   setReviewRunning(id: number): JiraReviewRunRow {
     this.db
       .update(jiraReviewRuns)
-      .set({ status: "running" })
+      .set({ status: 'running' })
       .where(eq(jiraReviewRuns.id, id))
       .run();
     return this.getReviewById(id)!;
@@ -139,7 +141,7 @@ export class JiraIssuesRepository {
         consoleLog: jiraReviewRuns.consoleLog,
       })
       .get();
-    console.log("appendConsoleLog", result?.consoleLog);
+    console.log('appendConsoleLog', result?.consoleLog);
   }
 
   /** queued/running -> failed. Persists whatever console output was captured before the failure, for debugging. */
@@ -151,7 +153,7 @@ export class JiraIssuesRepository {
     const now = new Date().toISOString();
     this.db
       .update(jiraReviewRuns)
-      .set({ status: "failed", errorMessage, consoleLog, completedAt: now })
+      .set({ status: 'failed', errorMessage, consoleLog, completedAt: now })
       .where(eq(jiraReviewRuns.id, id))
       .run();
     return this.getReviewById(id)!;

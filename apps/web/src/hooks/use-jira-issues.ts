@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  UndefinedInitialDataOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import {
   addIssue,
@@ -8,14 +13,20 @@ import {
   updateIssue,
 } from "../api/jira.api";
 import { fetchSyncedIssues, removeSyncedIssue } from "@/api/synced-issues.api";
-import { AtlassianIssue } from "@/types";
-import { jiraIssueGroup } from "@/atoms";
-import { useAtom } from "jotai";
+import { AtlassianIssue, Issue } from "@/types";
 
-export function useJiraIssues() {
+type UseQueryOptions<T> = Omit<
+  UndefinedInitialDataOptions<T, Error, T, string[]>,
+  "queryKey" | "queryFn"
+>;
+
+export function useJiraIssues(options?: UseQueryOptions<AtlassianIssue[]>) {
   return useQuery({
+    ...options,
     queryKey: ["jira", "issues"],
     queryFn: fetchAtlassianIssues,
+    refetchOnWindowFocus: true,
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -80,10 +91,13 @@ export function useAddIssue() {
   });
 }
 
-export function useSyncedIssues() {
+export function useSyncedIssues(options?: UseQueryOptions<Issue[]>) {
   return useQuery({
+    ...options,
     queryKey: ["synced-issues"],
     queryFn: () => fetchSyncedIssues({}),
+    refetchOnWindowFocus: true,
+    placeholderData: (previousData) => previousData,
   });
 }
 

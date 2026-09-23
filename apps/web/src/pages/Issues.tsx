@@ -7,6 +7,7 @@ import {
 import {
   Anchor,
   Badge,
+  BadgeProps,
   Button,
   Center,
   Group,
@@ -75,8 +76,8 @@ export function Issues() {
   );
 
   const { data: metadata, isLoading } = useJiraMetadata();
-  const atlassianIssues = useJiraIssues();
-  const syncedIssues = useSyncedIssues();
+  const atlassianIssues = useJiraIssues({ enabled: tab !== "synced" });
+  const syncedIssues = useSyncedIssues({ enabled: tab === "synced" });
   const removeSyncedIssue = useRemoveSyncedIssue();
   const syncIssue = useSyncIssue();
 
@@ -122,132 +123,147 @@ export function Issues() {
     };
   }, [metadata]);
 
-  const columns: MRT_ColumnDef<Issue>[] = [
-    {
-      accessorKey: "key",
-      header: "Key",
-      size: 120,
-      filterVariant: "multi-select",
-      Cell: ({ cell }) => {
-        const jiraId = cell.getValue<string | null>();
+  const columns = useMemo<MRT_ColumnDef<Issue>[]>(
+    () => [
+      {
+        accessorKey: "key",
+        header: "Key",
+        size: 120,
+        filterVariant: "multi-select",
+        Cell: ({ cell }) => {
+          const jiraId = cell.getValue<string | null>();
 
-        if (!jiraId) {
-          return "-";
-        }
+          if (!jiraId) {
+            return "-";
+          }
 
-        return (
-          <Anchor
-            href={`https://tx-tech.atlassian.net/browse/${jiraId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            size="xs"
-          >
-            {jiraId}
-          </Anchor>
-        );
+          return (
+            <Anchor
+              href={`https://tx-tech.atlassian.net/browse/${jiraId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="xs"
+            >
+              {jiraId}
+            </Anchor>
+          );
+        },
       },
-    },
-    {
-      accessorKey: "summary",
-      header: "Summary",
-      size: 700,
-    },
-    // {
-    //   accessorKey: "priority",
-    //   header: "Priority",
-    //   size: 120,
-    // },
-    {
-      accessorKey: "sprint",
-      header: "Sprint",
-      size: 280,
-      filterVariant: "multi-select",
-    },
-    {
-      accessorKey: "assignee",
-      header: "Assignee",
-      size: 180,
-      filterVariant: "multi-select",
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      size: 180,
-      filterVariant: "multi-select",
-      Cell: ({ cell }) => {
-        const status = cell.getValue<string>();
-        if (status === "-") {
-          return <Skeleton height={16} radius="xl" />;
-        }
-        const color =
-          {
+      {
+        accessorKey: "summary",
+        header: "Summary",
+        size: 700,
+      },
+      // {
+      //   accessorKey: "priority",
+      //   header: "Priority",
+      //   size: 120,
+      // },
+      {
+        accessorKey: "sprint",
+        header: "Sprint",
+        size: 280,
+        filterVariant: "multi-select",
+      },
+      {
+        accessorKey: "assignee",
+        header: "Assignee",
+        size: 180,
+        filterVariant: "multi-select",
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        size: 180,
+        filterVariant: "multi-select",
+        Cell: ({ cell }) => {
+          const status = cell.getValue<string>();
+          if (status === "-") {
+            return <Skeleton height={16} radius="xl" />;
+          }
+          const color: Record<string, BadgeProps["color"]> = {
             "Development Done": "green",
             "Delivered To PDM": "blue",
             Open: "gray",
             "In Progress": "yellow",
-          }[status] ?? "gray";
-        return (
-          <Badge color={color} variant="light">
-            {status}
-          </Badge>
-        );
+            Backlog: "indigo",
+          };
+
+          const variant: Record<string, BadgeProps["variant"]> = {
+            Backlog: "outline",
+            "In Progress": "dot",
+          };
+
+          return (
+            <Badge
+              color={color[status] ?? "gray"}
+              variant={variant[status] ?? "light"}
+            >
+              {status}
+            </Badge>
+          );
+        },
       },
-    },
-    {
-      accessorKey: "reviewedPassByAI",
-      header: "Reviewed by AI",
-      size: 100,
-      Cell: ({ cell, row }) => {
-        const reviewedPassByAI = cell.getValue<boolean | undefined>();
-        const labels = row.original.labels;
-        if (reviewedPassByAI === undefined) {
-          return <Skeleton height={16} radius="xl" />;
-        }
-        return (
-          <Tooltip
-            label={
-              labels ? (
-                <Group gap="sm">
-                  {labels.map((label) => (
-                    <Badge key={label} variant="default">
-                      {label}
-                    </Badge>
-                  ))}
-                </Group>
-              ) : undefined
-            }
-          >
-            <Center w="100%">
-              {reviewedPassByAI ? (
-                <IconCircleCheck size={20} color="green" />
-              ) : (
-                <IconExclamationCircle size={20} color="orange" />
-              )}
-            </Center>
-          </Tooltip>
-        );
+      {
+        accessorKey: "reviewedPassByAI",
+        header: "Reviewed by AI",
+        size: 100,
+        Cell: ({ cell, row }) => {
+          const reviewedPassByAI = cell.getValue<boolean | undefined>();
+          const labels = row.original.labels;
+          if (reviewedPassByAI === undefined) {
+            return <Skeleton height={16} radius="xl" />;
+          }
+          if (!labels || labels.length === 0) {
+            return null;
+          }
+          return (
+            <Tooltip
+              label={
+                labels ? (
+                  <Group gap="sm">
+                    {labels.map((label) => (
+                      <Badge key={label} variant="default">
+                        {label}
+                      </Badge>
+                    ))}
+                  </Group>
+                ) : undefined
+              }
+            >
+              <Center w="100%">
+                {reviewedPassByAI ? (
+                  <IconCircleCheck size={20} color="green" />
+                ) : (
+                  <IconExclamationCircle size={20} color="orange" />
+                )}
+              </Center>
+            </Tooltip>
+          );
+        },
       },
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Created At",
-      size: 140,
-      Cell: ({ cell }) => compactRelativeTime(cell.getValue<string>()),
-    },
-    {
-      accessorKey: "updated",
-      header: "Updated At",
-      size: 140,
-      Cell: ({ cell }) => compactRelativeTime(cell.getValue<string>()),
-    },
-    {
-      accessorKey: "group",
-      header: "Group",
-      size: 150,
-      filterVariant: "multi-select",
-      Cell: ({ row }) => groupMap[row.original.group] || row.original.group,
-    },
-  ];
+      {
+        accessorKey: "createdAt",
+        header: "Created At",
+        size: 140,
+        Cell: ({ cell }) => compactRelativeTime(cell.getValue<string>()),
+      },
+      {
+        accessorKey: "updated",
+        header: "Updated At",
+        size: 140,
+        Cell: ({ cell }) => compactRelativeTime(cell.getValue<string>()),
+      },
+      {
+        accessorKey: "group",
+        header: "Group",
+        size: 150,
+        filterVariant: "multi-select",
+        Cell: ({ row }) => groupMap[row.original.group] || row.original.group,
+      },
+    ],
+    [groupMap],
+  );
 
   const {
     state,
@@ -297,9 +313,10 @@ export function Issues() {
 
     state: {
       ...state,
+      isLoading: atlassianIssues.isLoading || syncedIssues.isLoading,
       showProgressBars:
-        atlassianIssues.isLoading ||
-        syncedIssues.isLoading ||
+        atlassianIssues.isFetching ||
+        syncedIssues.isFetching ||
         syncIssue.isPending ||
         removeSyncedIssue.isPending,
     },
@@ -313,7 +330,6 @@ export function Issues() {
     onExpandedChange: setExpanded,
     onIsFullScreenChange: setIsFullScreen,
 
-    initialState: {},
     renderRowActionMenuItems: ({ row }) => (
       <>
         <Menu.Label>Assign to group</Menu.Label>
