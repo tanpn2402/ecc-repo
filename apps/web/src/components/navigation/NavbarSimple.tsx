@@ -1,14 +1,16 @@
 import {
+  IconActivity,
   IconDashboard,
   IconGitMerge,
   IconList,
-  IconActivity,
-  IconSettings,
   IconLogout,
+  IconSettings,
 } from "@tabler/icons-react";
 import { NavLink } from "react-router-dom";
-import classes from "./NavbarSimple.module.css";
+
 import { ClaudeUsage } from "../claude-usage/ClaudeUsage";
+
+import classes from "./NavbarSimple.module.css";
 
 const data = [
   {
@@ -38,17 +40,23 @@ const data = [
   },
 ];
 
-export function NavbarSimple() {
+interface NavbarSimpleProps {
+  onNavigate?: () => void;
+}
+
+export function NavbarSimple({ onNavigate }: NavbarSimpleProps) {
   const links = data.map((item) => (
     <NavLink
       key={item.label}
       to={item.link}
       end={item.link === "/"}
+      onClick={onNavigate}
       className={({ isActive }) =>
         `${classes.link} ${isActive ? classes.active : ""}`
       }
     >
       <item.icon className={classes.linkIcon} size={20} stroke={1.5} />
+
       <span>{item.label}</span>
     </NavLink>
   ));
@@ -63,9 +71,12 @@ export function NavbarSimple() {
         <a
           href="#"
           className={classes.link}
-          onClick={(event) => event.preventDefault()}
+          onClick={(event) => {
+            event.preventDefault();
+          }}
         >
           <IconLogout className={classes.linkIcon} size={20} stroke={1.5} />
+
           <span>Logout</span>
         </a>
       </div>

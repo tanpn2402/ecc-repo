@@ -1,3 +1,4 @@
+import { globalFilterAtom } from "@/atoms/searchAtom";
 import {
   type MRT_ColumnFiltersState,
   type MRT_DensityState,
@@ -6,6 +7,8 @@ import {
   type MRT_SortingState,
   type MRT_VisibilityState,
 } from "@repo/mantine-table";
+import { useAtom, useAtomValue } from "jotai";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export interface TableQueryState {
@@ -87,6 +90,9 @@ function serializeHiddenColumns(visibility: MRT_VisibilityState): string {
 
 export function useTableQueryState(defaults: Partial<TableQueryState> = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // spotlight
+  const [spotlightFilter, setSpotlightFilter] = useAtom(globalFilterAtom);
 
   const defaultState: TableQueryState = {
     ...DEFAULT_STATE,
@@ -239,6 +245,19 @@ export function useTableQueryState(defaults: Partial<TableQueryState> = {}) {
   const setDensity = createSetter("density");
   const setExpanded = createSetter("expanded");
   const setIsFullScreen = createSetter("isFullScreen");
+
+  useEffect(() => {
+    if (spotlightFilter.triggered) {
+      setGlobalFilter(spotlightFilter.value);
+    }
+  }, [spotlightFilter]);
+
+  useEffect(() => {
+    setSpotlightFilter({
+      triggered: false,
+      value: state.globalFilter,
+    });
+  }, [state.globalFilter]);
 
   return {
     state,

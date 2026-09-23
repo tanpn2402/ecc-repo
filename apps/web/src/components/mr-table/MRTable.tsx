@@ -75,11 +75,7 @@ export function MRTable({ jiraKey }: MRTableProps) {
         const status = cell.getValue<string>();
         const gitlabState = row.original.status;
 
-        if (["merged"].includes(gitlabState)) {
-          return <MRStatusBadge status="MERGED" />;
-        }
-
-        return <MRStatusBadge status={status} />;
+        return <MRStatusBadge status={status} gitlabState={gitlabState} />;
       },
     },
     {

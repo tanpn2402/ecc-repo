@@ -46,6 +46,7 @@ export function MergeRequests() {
       {
         accessorKey: "jiraKey",
         header: "Jira",
+        filterVariant: "multi-select",
         size: 120,
         Cell: ({ row }) => (
           <Anchor
@@ -68,6 +69,7 @@ export function MergeRequests() {
       {
         accessorKey: "gitlabProject",
         header: "Project",
+        filterVariant: "multi-select",
         size: 220,
       },
 
@@ -75,6 +77,7 @@ export function MergeRequests() {
         accessorKey: "gitlabMrIid",
         header: "MR",
         size: 80,
+        filterVariant: "multi-select",
         Cell: ({ row }) => (
           <Anchor
             href={row.original.gitlabUrl}
@@ -90,6 +93,7 @@ export function MergeRequests() {
       {
         accessorKey: "author",
         header: "Author",
+        filterVariant: "multi-select",
         size: 150,
         Cell: ({ cell }) => (
           <Text size="sm">{cell.getValue<string | null>() || "-"}</Text>
@@ -100,15 +104,19 @@ export function MergeRequests() {
         accessorKey: "status",
         header: "MR Status",
         size: 130,
+        filterVariant: "multi-select",
+        mantineFilterMultiSelectProps: {
+          data: [
+            { label: "Merged", value: "merged" },
+            { label: "Open", value: "open" },
+            { label: "Closed", value: "closed" },
+          ],
+        },
         Cell: ({ cell, row }) => {
           const status = cell.getValue<string>();
           const gitlabState = row.original.status;
 
-          if (["merged"].includes(gitlabState)) {
-            return <MRStatusBadge status="MERGED" />;
-          }
-
-          return <MRStatusBadge status={status} />;
+          return <MRStatusBadge status={status} gitlabState={gitlabState} />;
         },
       },
 
@@ -219,7 +227,7 @@ export function MergeRequests() {
     enableColumnFilterModes: false,
     enableColumnOrdering: true,
     enableFacetedValues: true,
-    enableFilters: false,
+    enableFilters: true,
     enableDensityToggle: false,
     enableColumnFilters: true,
     columnFilterDisplayMode: "popover",
@@ -235,6 +243,7 @@ export function MergeRequests() {
     positionActionsColumn: "last",
     enableBottomToolbar: false,
     enablePagination: false,
+    enableGlobalFilter: true,
 
     onGroupingChange: setGrouping,
     onSortingChange: setSorting,

@@ -1,16 +1,12 @@
-import type { ReactNode } from 'react';
-import { Group, Space, Tabs, Title } from '@mantine/core';
-import React from 'react';
+import type { ReactNode } from "react";
+import { Group, Stack, Tabs, Title } from "@mantine/core";
+import React from "react";
+
+import classes from "./PageHeader.module.css";
 
 export interface PageHeaderTab {
   value: string;
   label: string;
-}
-
-export interface PageHeaderAction {
-  label: string;
-  onClick: () => void;
-  icon?: ReactNode;
 }
 
 interface PageHeaderProps {
@@ -34,62 +30,101 @@ export function PageHeader({
   actions = [],
 }: PageHeaderProps) {
   return (
-    <Group
-      h={64}
-      px="lg"
-      gap="lg"
-      align="center"
-      wrap="nowrap"
-      style={{
-        borderBottom:
-          '1px solid var(--mantine-color-default-border)',
-        position: 'sticky',
-        top: 'var(--app-shell-header-height)',
-        backgroundColor: 'var(--mantine-color-dark-9)',
-        borderRadius: 'var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0',
-        zIndex: 99,
-      }}
-    >
-      <Title order={2} size="h3" style={{ flexShrink: 0 }}>
-        {title}
-      </Title>
+    <header className={classes.pageHeader}>
+      <div className={classes.desktop}>
+        <Group mih={64} px="lg" gap="lg" align="center" wrap="nowrap">
+          <Title order={2} size="h3" className={classes.title}>
+            {title}
+          </Title>
 
-      {tabs && (
-        <Tabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          h="100%"
-        >
-          <Tabs.List h="100%">
-            {tabs.items.map((tab) => (
-              <Tabs.Tab key={tab.value} value={tab.value}
-                style={{
-                  borderRadius: 0,
-                }}>
-                {tab.label}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs>
-      )}
+          {tabs && (
+            <Tabs value={tabs.value} onChange={tabs.onChange} mih={64}>
+              <Tabs.List mih={64} className={classes.tabList}>
+                {tabs.items.map((tab) => (
+                  <Tabs.Tab
+                    key={tab.value}
+                    value={tab.value}
+                    className={classes.tab}
+                    mih={64}
+                  >
+                    {tab.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs>
+          )}
 
-      <Space flex={1} />
+          <div className={classes.spacer} />
 
-      {filters.length > 0 && (
-        <Group gap="sm" wrap="nowrap">
-          {filters.map((filter, index) => (
-            <React.Fragment key={index}>{filter}</React.Fragment>
-          ))}
+          {filters.length > 0 && (
+            <Group gap="sm" wrap="nowrap">
+              {filters.map((filter, index) => (
+                <React.Fragment key={index}>{filter}</React.Fragment>
+              ))}
+            </Group>
+          )}
+
+          {actions.length > 0 && (
+            <Group gap="sm" wrap="nowrap">
+              {actions.map((action, index) => (
+                <React.Fragment key={index}>{action}</React.Fragment>
+              ))}
+            </Group>
+          )}
         </Group>
-      )}
+      </div>
 
-      {actions.length > 0 && (
-        <Group gap="sm" ml="auto" wrap="nowrap">
-          {actions.map((action, index) => (
-            <React.Fragment key={index}>{action}</React.Fragment>
-          ))}
-        </Group>
-      )}
-    </Group>
+      <div className={classes.mobile}>
+        <Stack gap={0}>
+          <Group h={56} px="sm" justify="space-between" wrap="nowrap">
+            <Title order={2} size="h4" className={classes.title}>
+              {title}
+            </Title>
+
+            {actions.length > 0 && (
+              <Group gap="xs" wrap="nowrap">
+                {actions.map((action, index) => (
+                  <React.Fragment key={index}>{action}</React.Fragment>
+                ))}
+              </Group>
+            )}
+          </Group>
+
+          {tabs && (
+            <Tabs
+              value={tabs.value}
+              onChange={tabs.onChange}
+              className={classes.mobileTabs}
+            >
+              <Tabs.List px="sm">
+                {tabs.items.map((tab) => (
+                  <Tabs.Tab
+                    key={tab.value}
+                    value={tab.value}
+                    className={classes.tab}
+                  >
+                    {tab.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs>
+          )}
+
+          {filters.length > 0 && (
+            <Group
+              px="sm"
+              py="xs"
+              gap="sm"
+              wrap="wrap"
+              className={classes.filters}
+            >
+              {filters.map((filter, index) => (
+                <React.Fragment key={index}>{filter}</React.Fragment>
+              ))}
+            </Group>
+          )}
+        </Stack>
+      </div>
+    </header>
   );
 }

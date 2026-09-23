@@ -6,8 +6,63 @@
 
   position: sticky;
   top: var(--app-shell-header-height);
+  z-index: 99;
 }
 
-.tabs :global(.mantine-Tabs-tab) {
+.desktop {
+  display: block;
+}
+
+.mobile {
+  display: none;
+}
+
+.title {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+  min-width: 16px;
+}
+
+.tabList {
+  flex-wrap: nowrap;
+}
+
+.tab {
   height: 100%;
+  border-radius: 0;
+}
+
+.filters {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+@media (max-width: 48em) {
+  .desktop {
+    display: none;
+  }
+
+  .mobile {
+    display: block;
+  }
+
+  .pageHeader {
+    border-top-left-radius: var(--mantine-radius-md);
+    border-top-right-radius: var(--mantine-radius-md);
+  }
+
+  .mobileTabs {
+    height: 44px;
+  }
+
+  .mobileTabs :global(.mantine-Tabs-list) {
+    height: 44px;
+  }
+
+  .mobileTabs :global(.mantine-Tabs-tab) {
+    height: 44px;
+  }
 }

@@ -1,28 +1,36 @@
-import { AppShell } from '@mantine/core';
-import { Outlet } from 'react-router-dom';
-import { NavbarSimple } from '@/components/navigation/NavbarSimple';
-import { AppHeader } from '@/components/header/AppHeader';
+import { AppShell } from "@mantine/core";
+import { Outlet } from "react-router-dom";
 
-import classes from './AppLayout.module.css';
+import { AppHeader } from "@/components/header/AppHeader";
+import { NavbarSimple } from "@/components/navigation/NavbarSimple";
+
+import classes from "./AppLayout.module.css";
+import { useDisclosure } from "@mantine/hooks";
 
 export function AppLayout() {
+  const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] =
+    useDisclosure(false);
+
   return (
     <AppShell
+      header={{ height: 60 }}
       navbar={{
         width: 240,
-        breakpoint: 'sm',
+        breakpoint: "sm",
+        collapsed: {
+          mobile: !mobileOpened,
+        },
       }}
-      header={{ height: 60 }}
     >
       <AppShell.Header withBorder={false}>
-        <AppHeader />
+        <AppHeader mobileOpened={mobileOpened} toggleMobile={toggleMobile} />
       </AppShell.Header>
 
       <AppShell.Navbar withBorder={false}>
-        <NavbarSimple />
+        <NavbarSimple onNavigate={closeMobile} />
       </AppShell.Navbar>
 
-      <AppShell.Main className={classes.main} >
+      <AppShell.Main className={classes.main}>
         <div className={classes.mainInner}>
           <Outlet />
         </div>

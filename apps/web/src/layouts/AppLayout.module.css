@@ -8,6 +8,15 @@
   border-top-left-radius: var(--mantine-radius-lg);
   border-top-right-radius: var(--mantine-radius-lg);
   min-height: inherit;
-  /* padding: var(--mantine-spacing-md);
-  padding-bottom: 0; */
+}
+
+@media (max-width: 48em) {
+  .main {
+    padding-right: 0;
+  }
+
+  .mainInner {
+    border-top-left-radius: var(--mantine-radius-md);
+    border-top-right-radius: var(--mantine-radius-md);
+  }
 }
