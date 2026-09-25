@@ -70,7 +70,7 @@ export class JiraClient {
     jql: string,
     { maxResults = 100 }: { maxResults?: number } = {},
   ): Promise<JiraSearchIssue[]> {
-    const url = `${this.baseUrl}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=${maxResults}&expand=names&fields=summary,priority,assignee,status,updated,*navigable`;
+    const url = `${this.baseUrl}/rest/api/3/search/jql?jql=${encodeURIComponent(jql)}&maxResults=${maxResults}&expand=names&fields=summary,priority,assignee,status,updated,created,*navigable`;
     const headers = this._authHeader();
 
     logger.info('[searchIssues] Headers', headers);

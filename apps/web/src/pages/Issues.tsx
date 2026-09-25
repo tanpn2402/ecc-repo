@@ -1,13 +1,17 @@
 import { useCallback, useMemo, useState } from "react";
 import {
+  IconChecks,
   IconCircleCheck,
   IconExclamationCircle,
   IconPlus,
+  IconReload,
+  IconSparkles,
 } from "@tabler/icons-react";
 import {
   Anchor,
   Badge,
   BadgeProps,
+  Box,
   Button,
   Center,
   Group,
@@ -37,9 +41,18 @@ import { AddIssueModal } from "@/components/modals/AddIssueModal";
 import { useSearchParams } from "react-router-dom";
 import { compactRelativeTime } from "@/utils/datetime.utils";
 import { useTableQueryState } from "@/hooks/use-table-query-state";
+import { AskAiReviewModal } from "@/components/modals/AskAiReviewModal";
+import { MRPostReviewModal } from "@/components/modals/MRPostReviewModal";
 
 export function Issues() {
   const [opened, setOpened] = useState(false);
+  const [askAIReview, setAskAIReview] = useState<{ jiraKey: string } | null>(
+    null,
+  );
+  const [mrPostReview, setMrPostReview] = useState<{ jiraKey: string } | null>(
+    null,
+  );
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const tab = searchParams.get("tab") ?? "synced";
@@ -187,10 +200,12 @@ export function Issues() {
             Open: "gray",
             "In Progress": "yellow",
             Backlog: "indigo",
+            "Dev Change Reviewed": "green",
           };
 
           const variant: Record<string, BadgeProps["variant"]> = {
             Backlog: "outline",
+            "Dev Change Reviewed": "outline",
             "In Progress": "dot",
           };
 
@@ -310,6 +325,12 @@ export function Issues() {
     enableBottomToolbar: false,
     enablePagination: false,
     enableGlobalFilter: true,
+    mantineTableHeadCellProps: {
+      style: {
+        padding: "4px 8px",
+        fontSize: 12,
+      },
+    },
 
     state: {
       ...state,
@@ -337,6 +358,7 @@ export function Issues() {
           {groups.map(({ value, label }) => (
             <Menu.Item
               key={value}
+              leftSection={<Box w={10} />}
               onClick={() => assignIssueToGroup(row.getValue("key"), value)}
             >
               {label}
@@ -347,20 +369,39 @@ export function Issues() {
           <>
             <Menu.Divider />
             <Menu.Item
+              leftSection={<IconSparkles size={18} />}
+              onClick={() => setAskAIReview({ jiraKey: row.getValue("key") })}
+            >
+              Ask AI Review
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconSparkles size={18} />}
+              onClick={() => setMrPostReview({ jiraKey: row.getValue("key") })}
+            >
+              Post AI Review
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+              leftSection={<IconReload size={18} />}
               onClick={() =>
                 assignIssueToGroup(row.getValue("key"), row.original.group)
               }
             >
               Re-fetch Jira Data
             </Menu.Item>
-            <Menu.Item onClick={() => markIssueDone(row.getValue("key"))}>
+            <Menu.Item
+              leftSection={<IconChecks size={18} />}
+              onClick={() => markIssueDone(row.getValue("key"))}
+            >
               Mark Done
             </Menu.Item>
           </>
         ) : null}
       </>
     ),
-    renderDetailPanel: ({ row }) => <MRTable jiraKey={row.original.key} />,
+    renderDetailPanel: ({ row }) => (
+      <MRTable jiraKey={row.original.key} issue={row.original} />
+    ),
   });
 
   return (
@@ -407,6 +448,18 @@ export function Issues() {
       </PageContent>
 
       <AddIssueModal opened={opened} onClose={() => setOpened(false)} />
+
+      <AskAiReviewModal
+        jiraKey={askAIReview?.jiraKey ?? ""}
+        opened={!!askAIReview}
+        onClose={() => setAskAIReview(null)}
+      />
+
+      <MRPostReviewModal
+        jiraKey={mrPostReview?.jiraKey ?? ""}
+        opened={!!mrPostReview}
+        onClose={() => setMrPostReview(null)}
+      />
     </div>
   );
 }

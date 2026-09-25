@@ -1,4 +1,4 @@
-import { Anchor, Drawer, Group, Stack, Tabs, Text } from "@mantine/core";
+import { Anchor, Code, Drawer, Group, Stack, Tabs, Text } from "@mantine/core";
 
 import type { MergeRequest } from "@/types";
 import { useMrReviews } from "@/hooks/use-merge-requests";
@@ -10,6 +10,7 @@ import MRStatusBadge from "../badges/MRStatusBadge";
 
 import classes from "./MRDetailDrawer.module.css";
 import { useMrDetailDrawer } from "@/hooks/use-mr-detail-drawer";
+import { IconChevronRight } from "@tabler/icons-react";
 
 type MRDetailDrawerProps = {
   mr: MergeRequest | null;
@@ -64,7 +65,6 @@ export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
             <Text size="sm" c="dimmed">
               MR:
             </Text>
-
             <Anchor
               href={mrUrl}
               target="_blank"
@@ -73,6 +73,17 @@ export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
             >
               !{mr.gitlabMrIid}
             </Anchor>
+            <Text size="xs">({mr.author})</Text>
+          </Group>
+
+          <Group gap="xs">
+            <Text size="sm" c="dimmed">
+              Project:
+            </Text>
+
+            <Code>{mr.gitlabProject}</Code>
+            <IconChevronRight size={12} />
+            <Code>{mr.targetBranch}</Code>
           </Group>
 
           <Group gap="xs">
@@ -100,7 +111,7 @@ export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
         }}
       />
 
-      <Tabs defaultValue="console" h="100%">
+      <Tabs defaultValue="detail" h="100%">
         <Tabs.List>
           <Tabs.Tab value="console">Console</Tabs.Tab>
           <Tabs.Tab value="detail">Detail</Tabs.Tab>

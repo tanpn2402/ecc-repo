@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 import { MRService } from './mr.service';
 
@@ -9,5 +9,14 @@ export class MrController {
   @Get()
   async getMrs() {
     return this.mrService.listMrs();
+  }
+
+  @Post('review')
+  async createReview(@Body() body: { gitlabUrls: string[]; review: string }) {
+    const result: any[] = [];
+    for (const gitlabUrl of body.gitlabUrls) {
+      result.push(await this.mrService.createReview(gitlabUrl, body.review));
+    }
+    return result;
   }
 }

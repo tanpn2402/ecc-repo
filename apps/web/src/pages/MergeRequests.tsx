@@ -1,6 +1,14 @@
 import { PageContent } from "@/components/page-content/PageContent";
 import { PageHeader } from "@/components/page-header/PageHeader";
-import { Anchor, Button, Center, Group, Skeleton, Text } from "@mantine/core";
+import {
+  Anchor,
+  Button,
+  Center,
+  Code,
+  Group,
+  Skeleton,
+  Text,
+} from "@mantine/core";
 import { useMemo, useState } from "react";
 import {
   MantineReactTable,
@@ -70,7 +78,15 @@ export function MergeRequests() {
         accessorKey: "gitlabProject",
         header: "Project",
         filterVariant: "multi-select",
-        size: 220,
+        size: 240,
+        Cell: ({ cell }) => <Code>{cell.getValue<string>()}</Code>,
+      },
+
+      {
+        accessorKey: "targetBranch",
+        header: "Target Branch",
+        size: 180,
+        Cell: ({ cell }) => <Code>{cell.getValue<string>()}</Code>,
       },
 
       {
@@ -214,6 +230,7 @@ export function MergeRequests() {
     ],
     columnVisibility: {
       gitlabProject: false,
+      targetBranch: false,
     },
   });
 
@@ -244,6 +261,12 @@ export function MergeRequests() {
     enableBottomToolbar: false,
     enablePagination: false,
     enableGlobalFilter: true,
+    mantineTableHeadCellProps: {
+      style: {
+        padding: "4px 8px",
+        fontSize: 12,
+      },
+    },
 
     onGroupingChange: setGrouping,
     onSortingChange: setSorting,

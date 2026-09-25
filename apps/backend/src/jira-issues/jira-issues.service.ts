@@ -41,6 +41,7 @@ export interface MergeRequestDto {
   gitlabUrl: string;
   gitlabProject: string;
   gitlabMrIid: number;
+  targetBranch: string;
   jiraKey: string | null;
   jiraTitle: string | null;
   author: string | null;
@@ -55,7 +56,7 @@ export interface MergeRequestDto {
 export interface IssueDto {
   key: string;
   summary: string;
-  labels?: string;
+  labels?: string[];
   priority: 'High' | 'Medium' | 'Low';
   sprint: string;
   group: string;
@@ -90,6 +91,8 @@ export interface GitlabMr {
   gitlabProject: string;
   gitlabMrIid: number;
   gitlabState: string;
+  title: string;
+  targetBranch: string;
   author: string | null;
   authorId: number | null;
   authorName: string | null;
@@ -145,7 +148,11 @@ export class JiraIssuesService extends EventEmitter {
     return {
       key: row.jiraKey,
       summary: row.summary,
-      labels: row.labels ?? undefined,
+      labels: Array.isArray(row.labels)
+        ? row.labels
+        : row.labels
+          ? row.labels.split(',')
+          : undefined,
       priority: row.priority as IssueDto['priority'],
       sprint: row.sprint || 'Backlog',
       group: row.group || '',
@@ -186,6 +193,8 @@ export class JiraIssuesService extends EventEmitter {
         gitlabUrl: mrUrl.canonicalUrl,
         gitlabProject: mrUrl.projectPath,
         gitlabMrIid: mrUrl.iid,
+        title: mr.title,
+        targetBranch: mr.targetBranch,
         author: mr.author || null,
         authorId: mr.authorId || null,
         authorName: mr.authorName || null,
@@ -202,6 +211,8 @@ export class JiraIssuesService extends EventEmitter {
         gitlabUrl: mrUrl.canonicalUrl,
         gitlabProject: mrUrl.projectPath,
         gitlabMrIid: mrUrl.iid,
+        title: "",
+        targetBranch: "",
         author: 'dev',
         authorId: null,
         authorName: null,
@@ -224,7 +235,8 @@ export class JiraIssuesService extends EventEmitter {
       jiraKey: null,
       jiraTitle: null,
       author: resolved.authorName ?? 'Unknown',
-      title: null,
+      title: resolved.title,
+      targetBranch: resolved.targetBranch,
       status: resolved.gitlabState,
       reviewStatus: latest?.status ?? null,
       reviewVerdict: latest?.verdict ?? null,
@@ -368,6 +380,9 @@ export class JiraIssuesService extends EventEmitter {
         if (data[issue.jiraKey]) {
           return {
             ...issue,
+            labels: data[issue.jiraKey].labels
+              ? (data[issue.jiraKey].labels || []).join(',')
+              : issue.labels,
             status: data[issue.jiraKey].status || issue.status,
             reviewedPassByAI: data[issue.jiraKey].labels?.some((label) =>
               this.config.jiraIssuesPage.reviewedPassByAILabel.includes(label),

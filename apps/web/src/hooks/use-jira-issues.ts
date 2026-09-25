@@ -12,7 +12,11 @@ import {
   syncIssue,
   updateIssue,
 } from "../api/jira.api";
-import { fetchSyncedIssues, removeSyncedIssue } from "@/api/synced-issues.api";
+import {
+  createMrReview,
+  fetchSyncedIssues,
+  removeSyncedIssue,
+} from "@/api/synced-issues.api";
 import { AtlassianIssue, Issue } from "@/types";
 
 type UseQueryOptions<T> = Omit<
@@ -147,6 +151,20 @@ export function useUpdateIssue() {
 
       queryClient.invalidateQueries({
         queryKey: ["synced-issues"],
+      });
+    },
+  });
+}
+
+export function useCreateMrReview(key: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createMrReview,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["jira", "issues", key, "mrs"],
       });
     },
   });

@@ -72,7 +72,9 @@ export function MRReviewDetail({ review }: MRReviewDetailProps) {
                   ),
 
                   p: ({ children }) => (
-                    <p style={{ margin: "8px 0" }}>{children}</p>
+                    <p style={{ margin: "8px 0", whiteSpace: "break-spaces" }}>
+                      {children}
+                    </p>
                   ),
 
                   code: ({ children }) => (

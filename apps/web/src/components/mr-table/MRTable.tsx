@@ -5,8 +5,8 @@ import {
   useMantineReactTable,
   type MRT_ColumnDef,
 } from "@repo/mantine-table";
-import { MergeRequest } from "@/types";
-import { Anchor, Button, Center, Group, Text } from "@mantine/core";
+import { Issue, MergeRequest } from "@/types";
+import { Anchor, Button, Center, Code, Group, Text } from "@mantine/core";
 import { MRDetailDrawer } from "./MRDetailDrawer";
 import { MRReviewDialog } from "./MRReviewDialog";
 import { IconMenuDeep, IconPlayerPlay } from "@tabler/icons-react";
@@ -16,9 +16,10 @@ import ReviewStatusBadge from "../badges/ReviewStatusBadge";
 
 export type MRTableProps = {
   jiraKey: string;
+  issue?: Issue | null;
 };
 
-export function MRTable({ jiraKey }: MRTableProps) {
+export function MRTable({ jiraKey, issue }: MRTableProps) {
   const [detailMrId, setDetailMrId] = useState<string | null>(null);
   const [reviewMrId, setReviewMrId] = useState<string | null>(null);
 
@@ -66,6 +67,18 @@ export function MRTable({ jiraKey }: MRTableProps) {
       accessorKey: "author",
       header: "Author",
       size: 180,
+    },
+    {
+      accessorKey: "gitlabProject",
+      header: "Project",
+      size: 240,
+      Cell: ({ cell }) => <Code>{cell.getValue<string>()}</Code>,
+    },
+    {
+      accessorKey: "targetBranch",
+      header: "Target Branch",
+      size: 180,
+      Cell: ({ cell }) => <Code>{cell.getValue<string>()}</Code>,
     },
     {
       accessorKey: "status",
@@ -133,7 +146,7 @@ export function MRTable({ jiraKey }: MRTableProps) {
     columns,
     data: mrs,
     enableColumnFilterModes: false,
-    enableColumnOrdering: true,
+    enableColumnOrdering: false,
     enableFacetedValues: true,
     enableFilters: false,
     enableDensityToggle: false,
@@ -141,9 +154,9 @@ export function MRTable({ jiraKey }: MRTableProps) {
     columnFilterDisplayMode: "popover",
     enableFullScreenToggle: false,
     enableColumnActions: false,
-    enableColumnResizing: true,
+    enableColumnResizing: false,
     enableHiding: true,
-    enableColumnPinning: true,
+    enableColumnPinning: false,
     enableTopToolbar: false,
     enableRowActions: false,
     positionActionsColumn: "last",
@@ -157,8 +170,20 @@ export function MRTable({ jiraKey }: MRTableProps) {
         minHeight: "36px",
       },
     },
+    mantineTableHeadCellProps: {
+      style: {
+        padding: "4px 8px",
+        fontSize: 10,
+      },
+    },
     initialState: {
       density: "xs",
+      sorting: [
+        {
+          id: "createdAt",
+          desc: true,
+        },
+      ],
     },
     state: {
       isLoading: issueMrs.isLoading,
@@ -180,7 +205,11 @@ export function MRTable({ jiraKey }: MRTableProps) {
     <>
       <MantineReactTable table={table} />
       <MRDetailDrawer
-        mr={detailMr ?? null}
+        mr={
+          detailMr
+            ? { ...detailMr, jiraTitle: issue?.summary ?? "", jiraKey }
+            : null
+        }
         opened={!!detailMr}
         onClose={() => setDetailMrId(null)}
       />

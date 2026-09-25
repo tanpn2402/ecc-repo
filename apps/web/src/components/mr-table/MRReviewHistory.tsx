@@ -11,7 +11,7 @@ import {
 import type { ReviewRun } from "@/types";
 
 import { MRReviewDetail } from "./MRReviewDetail";
-import { formatDateTime } from "@/utils/datetime.utils";
+import { compactRelativeTime } from "@/utils/datetime.utils";
 
 type ReviewHistoryProps = {
   history: ReviewRun[];
@@ -33,7 +33,7 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
         Cell: ({ cell }) => {
           const dt = cell.getValue<string | null>();
           if (dt) {
-            return formatDateTime(dt);
+            return compactRelativeTime(dt);
           }
           return "";
         },
@@ -45,7 +45,7 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
         Cell: ({ cell }) => {
           const dt = cell.getValue<string | null>();
           if (dt) {
-            return formatDateTime(dt);
+            return compactRelativeTime(dt);
           }
           return "";
         },
@@ -76,10 +76,16 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
     enableExpandAll: false,
     enableExpanding: history.length > 0,
 
+    mantineDetailPanelProps: {
+      style: {
+        padding: 0,
+      },
+    },
+
     renderDetailPanel:
       history.length > 0
         ? ({ row }) => (
-            <Stack p="md">
+            <Stack>
               <MRReviewDetail review={row.original} />
             </Stack>
           )
@@ -95,6 +101,12 @@ export function MRReviewHistory({ history }: ReviewHistoryProps) {
 
     initialState: {
       density: "xs",
+      sorting: [
+        {
+          id: "createdAt",
+          desc: true,
+        },
+      ],
     },
   });
 

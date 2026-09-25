@@ -15,6 +15,11 @@ export type UpsertMrInput = {
   createdAt?: string | null;
 };
 
+export type CreateMrReviewInput = Omit<
+  typeof jiraReviewRuns.$inferSelect,
+  'id'
+>;
+
 @Injectable()
 export class MrRepository {
   constructor(@Inject(DRIZZLE_DB) private readonly db: DrizzleDb) {}
@@ -101,5 +106,10 @@ export class MrRepository {
       .returning();
 
     return mr;
+  }
+
+  async createReviewRun(data: CreateMrReviewInput) {
+    const [run] = await this.db.insert(jiraReviewRuns).values(data).returning();
+    return run;
   }
 }
