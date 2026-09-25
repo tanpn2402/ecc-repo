@@ -11,7 +11,8 @@ import {
   gitlabActivityDateFromAtom,
   gitlabActivityDateToAtom,
 } from "@/atoms";
-import { fetchGitlabActivitiesMeta, fetchGitlabActivities } from "@/lib/gitlab-activities-api";
+import { fetchGitlabActivitiesMeta, fetchGitlabActivities } from "@/api/gitlab.api";
+import { getErrorMessage } from "@/utils/error.utils";
 
 function toDateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -63,8 +64,15 @@ export function useGitlabActivitiesData() {
           setMetaLoaded(true);
         }
       })
-      .catch((err: any) => {
-        if (mountedRef.current) setError(err.message || "Failed to load GitLab Activities filters");
+      .catch((error: unknown) => {
+        if (mountedRef.current) {
+          setError(
+            getErrorMessage(
+              error,
+              "Failed to load GitLab Activities filters",
+            ),
+          );
+        }
       });
   }, [metaLoaded, setMeta, setMetaLoaded, setError]);
 
@@ -87,8 +95,10 @@ export function useGitlabActivitiesData() {
         to: dateTo,
       });
       if (mountedRef.current) setActivities(activities);
-    } catch (err: any) {
-      if (mountedRef.current) setError(err.message || "Failed to load GitLab activities");
+    } catch (error: unknown) {
+      if (mountedRef.current) {
+        setError(getErrorMessage(error, "Failed to load GitLab activities"));
+      }
     } finally {
       if (mountedRef.current) setLoading(false);
     }

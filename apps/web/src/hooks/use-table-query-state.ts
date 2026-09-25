@@ -7,7 +7,7 @@ import {
   type MRT_SortingState,
   type MRT_VisibilityState,
 } from "@repo/mantine-table";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 

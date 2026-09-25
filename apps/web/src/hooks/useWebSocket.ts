@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSetAtom } from 'jotai';
 import { connectionStatusAtom, consoleOutputAtom, mrsAtom, reviewingMrIdsAtom } from '../atoms';
-import { applyWsEvent, reduceConsoleOutput, reduceReviewingIds } from '../lib/mr-logic.js';
+import { applyWsEvent, reduceConsoleOutput, reduceReviewingIds } from '../utils/mr-logic';
 import type { WsEvent } from '../types';
 
 const INITIAL_BACKOFF_MS = 1000;

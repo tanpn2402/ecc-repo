@@ -1,9 +1,7 @@
 import {
   ActionIcon,
-  AppShell,
   Badge,
   Burger,
-  Button,
   Group,
   Indicator,
   Kbd,
@@ -12,7 +10,6 @@ import {
   ScrollArea,
   Stack,
   Text,
-  TextInput,
 } from "@mantine/core";
 import { IconBell, IconSearch } from "@tabler/icons-react";
 import { useEffect, useState } from "react";

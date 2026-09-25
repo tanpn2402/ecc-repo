@@ -25,13 +25,16 @@ import {
 } from "@/atoms";
 import {
   fetchAtlassianIssues,
-  fetchSyncedIssues,
   syncIssue,
-  removeSyncedIssue,
-  fetchMrReviews,
   fetchIssueMrs,
-  fetchWorkspaces,
-} from "@/lib/jira-api";
+} from "@/api/jira.api";
+import {
+  fetchSyncedIssues,
+  removeSyncedIssue,
+} from "@/api/synced-issues.api";
+import { fetchMrReviews } from "@/api/merge-requests.api";
+import { fetchWorkspaces } from "@/api/workspaces.api";
+import { getErrorMessage } from "@/utils/error.utils";
 
 /**
  * Fetches only the active Jira Issues page tab's table (not both) and
@@ -72,15 +75,15 @@ export function useJiraIssuesData() {
             setAtlassianLoaded(true);
           }
         } else {
-          const synced = await fetchSyncedIssues();
+          const synced = await fetchSyncedIssues({});
           if (mountedRef.current) {
             setSynced(synced);
             setSyncedLoaded(true);
           }
         }
-      } catch (err: any) {
+      } catch (error: unknown) {
         if (mountedRef.current)
-          setError(err.message || "Failed to load Jira issues");
+          setError(getErrorMessage(error, "Failed to load Jira issues"));
       } finally {
         if (mountedRef.current) setLoading(false);
       }
@@ -98,22 +101,21 @@ export function useJiraIssuesData() {
   useEffect(() => {
     if (pageTab === "atlassian" && !atlassianLoaded) load("atlassian");
     if (pageTab === "synced" && !syncedLoaded) load("synced");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageTab, atlassianLoaded, syncedLoaded]);
+  }, [pageTab, atlassianLoaded, syncedLoaded, load]);
 
   const refetch = useCallback(() => load(pageTab), [load, pageTab]);
 
   const sync = useCallback(
-    async (key: string) => {
+    async (key: string, group: string) => {
       setSyncingKeys((s) => new Set(s).add(key));
       try {
-        await syncIssue(key);
+        await syncIssue({ key, group });
         // Sync moves the issue into Synced Issues too — mark it stale so
         // switching there fetches the fresh list instead of showing cache.
         setSyncedLoaded(false);
         await load("atlassian");
-      } catch (err: any) {
-        setError(err.message || `Failed to sync ${key}`);
+      } catch (error: unknown) {
+        setError(getErrorMessage(error, `Failed to sync ${key}`));
       } finally {
         setSyncingKeys((s) => {
           const next = new Set(s);
@@ -134,8 +136,8 @@ export function useJiraIssuesData() {
         setSynced((prev) => prev.filter((issue) => issue.key !== key));
         // The Atlassian tab's "Synced" column is now stale for this issue.
         setAtlassianLoaded(false);
-      } catch (err: any) {
-        setError(err.message || `Failed to remove ${key}`);
+      } catch (error: unknown) {
+        setError(getErrorMessage(error, `Failed to remove ${key}`));
       } finally {
         setRemovingKeys((s) => {
           const next = new Set(s);
@@ -164,8 +166,8 @@ export function useMrReviews(mrId: string | null) {
       try {
         const result = await fetchMrReviews(id);
         setCache((prev) => ({ ...prev, [id]: result }));
-      } catch (err: any) {
-        setError(err.message || "Failed to load review history");
+      } catch (error: unknown) {
+        setError(getErrorMessage(error, "Failed to load review history"));
       } finally {
         setLoading(false);
       }
@@ -220,10 +222,13 @@ export function useIssueMrs() {
         const mrs = await fetchIssueMrs(key);
         setCache((prev) => ({ ...prev, [key]: mrs }));
         return mrs;
-      } catch (err: any) {
+      } catch (error: unknown) {
         setErrors((prev) => ({
           ...prev,
-          [key]: err.message || `Failed to load merge requests for ${key}`,
+          [key]: getErrorMessage(
+            error,
+            `Failed to load merge requests for ${key}`,
+          ),
         }));
         return null;
       } finally {
@@ -234,7 +239,6 @@ export function useIssueMrs() {
         });
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [cache, loadingKeys, setCache, setLoadingKeys, setErrors],
   );
 
@@ -260,8 +264,8 @@ export function useWorkspaces() {
       const list = await fetchWorkspaces();
       setWorkspaces(list);
       setLoaded(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to load workspaces");
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, "Failed to load workspaces"));
     } finally {
       setLoading(false);
     }

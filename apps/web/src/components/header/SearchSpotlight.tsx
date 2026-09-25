@@ -2,8 +2,7 @@ import { useAtom } from "jotai";
 import { Modal, TextInput, Kbd, Group } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import { globalFilterAtom } from "@/atoms/searchAtom";
-import { useDebounceCallback, useDebounceValue } from "usehooks-ts";
-import { useEffect, useState } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 
 interface SearchSpotlightProps {
   opened: boolean;

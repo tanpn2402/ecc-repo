@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/api/socket.api";
-import { Issue, JiraMrStatus, MergeRequest, ReviewRun } from "@/types";
+import { Issue, MergeRequest, ReviewRun } from "@/types";
 import { MrReviews } from "@/api/merge-requests.api";
 
 function onMRStarted(payload: { mrId: string; jiraKey: string }) {

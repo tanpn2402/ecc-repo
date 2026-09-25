@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useSetAtom, useStore } from "jotai";
 import { activeReviewMrIdsAtom, liveConsoleAtom, mrReviewsAtom, issueMrsAtom } from "@/atoms";
-import { fetchIssueMrs } from "@/lib/jira-api";
+import { fetchIssueMrs } from "@/api/jira.api";
 import type { JiraReviewWsEvent } from "@/types";
 
 const INITIAL_BACKOFF_MS = 1000;
@@ -149,8 +149,7 @@ export function useJiraReviewSocket() {
       if (activeSocket === socket) activeSocket = null;
       socket?.close();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setActiveIds, setLiveConsole, setMrReviews, store]);
 }
 
 export default useJiraReviewSocket;

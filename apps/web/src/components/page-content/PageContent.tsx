@@ -1,11 +1,7 @@
 import classes from "./PageContent.module.css";
 
-export interface PageContentProps extends React.PropsWithChildren {
-  // 
-}
+export type PageContentProps = React.PropsWithChildren;
 
 export function PageContent({ children }: PageContentProps) {
-  return <div className={classes.pageContent}>
-    {children}
-  </div>
+  return <div className={classes.pageContent}>{children}</div>;
 }

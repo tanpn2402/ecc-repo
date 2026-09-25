@@ -57,7 +57,7 @@ export type WsEventType =
 
 export interface WsEvent {
   type: WsEventType;
-  payload: any;
+  payload: unknown;
 }
 
 // === Jira Issues page (docs/BACKEND_SPEC.md) ===
