@@ -140,8 +140,43 @@ export class GitlabClient {
       return [];
     }
 
+    const batches = this.chunk(gitlabMrIids, 50);
+    const results: GitlabMrInfo[] = [];
+
+    for (const [index, batch] of batches.entries()) {
+      logger.info('Fetching GitLab MRs batch', {
+        gitlabProject,
+        batch: index + 1,
+        totalBatches: batches.length,
+        count: batch.length,
+      });
+
+      const mrs = await this.fetchMrsBatch({
+        gitlabUrl,
+        gitlabProject,
+        gitlabMrIids: batch,
+      });
+
+      results.push(...mrs);
+    }
+
+    logger.info('Fetched GitLab MRs data', {
+      gitlabProject,
+      requested: gitlabMrIids.length,
+      fetched: results.length,
+    });
+
+    return results;
+  }
+
+  private async fetchMrsBatch({
+    gitlabUrl,
+    gitlabProject,
+    gitlabMrIids,
+  }: FetchMrsMetadataParams): Promise<GitlabMrInfo[]> {
     const host = new URL(gitlabUrl).host;
     const projectId = encodeURIComponent(gitlabProject);
+
     const url = new URL(
       `https://${host}/api/v4/projects/${projectId}/merge_requests`,
     );
@@ -150,35 +185,38 @@ export class GitlabClient {
       url.searchParams.append('iids[]', String(iid));
     }
 
-    logger.info('Fetching GitLab MRs data', {
-      gitlabUrl,
-      gitlabProject,
-      gitlabMrIids,
-      url: url.toString(),
-    });
-
     const res = await fetch(url, {
       headers: this.token ? { 'PRIVATE-TOKEN': this.token } : {},
     });
 
     if (!res.ok) {
       throw new Error(
-        `GitLab API returned ${res.status} for ${gitlabProject} MRs`,
+        `GitLab API returned ${res.status} for ${gitlabProject} MRs: ${JSON.stringify(
+          {
+            error: res.statusText,
+            url: url.toString(),
+          },
+        )}`,
       );
     }
 
-    const body: any = await res.json();
+    const body: unknown = await res.json();
 
     if (!Array.isArray(body)) {
       return [];
     }
 
-    logger.info('Fetched GitLab MRs data', {
-      gitlabProject,
-      count: body.length,
-    });
-
     return body.map(this.mapMr);
+  }
+
+  private chunk<T>(items: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+
+    for (let i = 0; i < items.length; i += size) {
+      chunks.push(items.slice(i, i + size));
+    }
+
+    return chunks;
   }
 
   /**

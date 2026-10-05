@@ -127,7 +127,7 @@ export function MRDetailDrawer({ mr, opened, onClose }: MRDetailDrawerProps) {
         </Tabs.Panel>
 
         <Tabs.Panel value="history" pt="md" h="calc(100% - 34px)">
-          <MRReviewHistory history={mrReviews.data?.history ?? []} />
+          <MRReviewHistory mr={mr} history={mrReviews.data?.history ?? []} />
         </Tabs.Panel>
       </Tabs>
     </Drawer>

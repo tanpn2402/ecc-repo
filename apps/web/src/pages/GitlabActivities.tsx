@@ -210,6 +210,12 @@ export function GitlabActivities() {
     },
     enablePagination: false,
     enableColumnActions: false,
+    mantineTableHeadCellProps: {
+      style: {
+        padding: "2px 16px",
+        fontSize: 12,
+      },
+    },
   });
 
   return (

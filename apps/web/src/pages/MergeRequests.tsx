@@ -263,7 +263,7 @@ export function MergeRequests() {
     enableGlobalFilter: true,
     mantineTableHeadCellProps: {
       style: {
-        padding: "4px 8px",
+        padding: "4px 16px",
         fontSize: 12,
       },
     },

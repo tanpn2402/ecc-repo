@@ -222,6 +222,13 @@ export function Issues() {
       {
         accessorKey: "reviewedPassByAI",
         header: "Reviewed by AI",
+        filterVariant: "select",
+        mantineFilterSelectProps: {
+          data: [
+            { label: "Passed", value: "true" },
+            { label: "Failed/Not yet review", value: "false" },
+          ],
+        },
         size: 100,
         Cell: ({ cell, row }) => {
           const reviewedPassByAI = cell.getValue<boolean | undefined>();
@@ -327,7 +334,7 @@ export function Issues() {
     enableGlobalFilter: true,
     mantineTableHeadCellProps: {
       style: {
-        padding: "4px 8px",
+        padding: "4px 16px",
         fontSize: 12,
       },
     },
