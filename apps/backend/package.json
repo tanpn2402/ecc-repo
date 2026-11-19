@@ -23,10 +23,11 @@
     "db:migrate": "npx drizzle-kit migrate"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.325",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/platform-ws": "^11.2.1",
+    "@nestjs/platform-socket.io": "11.2.10",
     "@nestjs/websockets": "^11.2.1",
     "better-sqlite3": "^11.10.0",
     "dotenv": "^17.4.2",
@@ -35,7 +36,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sanitize-html": "^2.17.5",
-    "ws": "^8.21.3"
+    "socket.io": "4.8.3",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

@@ -1,7 +1,8 @@
 import axios from "axios";
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "api",
+  // Absolute: a relative "api" resolves against nested routes (/analysis/1 -> /analysis/api/...).
+  baseURL: import.meta.env.VITE_API_URL ?? "/api",
   headers: {
     "Content-Type": "application/json",
   },
