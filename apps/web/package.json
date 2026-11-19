@@ -10,6 +10,8 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
+    "@assistant-ui/react": "0.15.32",
+    "@assistant-ui/react-markdown": "0.14.24",
     "@faker-js/faker": "^10.6.0",
     "@mantine/core": "^9.5.1",
     "@mantine/dates": "^9.5.2",
@@ -27,6 +29,7 @@
     "react-hook-form": "^7.86.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.2",
+    "remark-gfm": "4.0.1",
     "socket.io-client": "^4.8.3",
     "usehooks-ts": "^3.1.1"
   },

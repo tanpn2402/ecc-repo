@@ -8,7 +8,7 @@ import { ClaudeModule } from './claude/claude.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { JiraIssuesModule } from './jira-issues/jira-issues.module';
 import { GitlabActivitiesModule } from './gitlab-activities/gitlab-activities.module';
-import { WsModule } from './ws/ws.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { HealthController } from './common/health.controller';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import logger from './common/logger';
@@ -17,11 +17,12 @@ import JiraClient from './mr/jira-client';
 import { OpsModule } from './ops/ops.module';
 import { TeamsModule } from './teams/teams.module';
 import { MrModule } from './mr/mr.module';
+import { AnalysisModule } from './analysis/analysis.module';
 
 /**
  * Root module. Built via forRoot(config) rather than a static @Module
- * decorator because WsModule must only be imported when
- * config.websocket.enabled is true (see ws/ws.module.ts) — matching
+ * decorator because RealtimeModule must only be imported when
+ * config.websocket.enabled is true (see realtime/realtime.module.ts) — matching
  * index.js's `if (config.websocket.enabled) { wss = new MrWebSocketServer(...) }`
  * gate, where a disabled websocket meant no listener at all, not an
  * always-created-but-ignored one.
@@ -39,6 +40,7 @@ export class AppModule {
       GitlabActivitiesModule,
       OpsModule,
       TeamsModule,
+      AnalysisModule,
       GlobalModule,
     ];
     if (config.telegram.enabled) {
@@ -47,9 +49,9 @@ export class AppModule {
       logger.info('TelegramModule has been disabled');
     }
     if (config.websocket.enabled) {
-      imports.push(WsModule);
+      imports.push(RealtimeModule);
     } else {
-      logger.info('WsModule has been disabled');
+      logger.info('RealtimeModule has been disabled');
     }
 
     return {

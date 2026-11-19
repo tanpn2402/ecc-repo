@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         "/api": backendOrigin,
-        "/ws": { target: backendOrigin.replace("http", "ws"), ws: true },
+        "/socket.io": { target: backendOrigin, ws: true },
       },
       allowedHosts: ["redbird-rapid-safely.ngrok-free.app", "localhost"],
     },

@@ -68,6 +68,21 @@ export class GitlabClient {
     this.token = token;
   }
 
+  /**
+   * GET `<baseUrl>/api/v4<apiPath>`. Returns parsed JSON, or the raw text when
+   * `raw` is set (file contents). Throws on non-2xx.
+   */
+  async apiGet<T = any>(baseUrl: string, apiPath: string, raw = false): Promise<T> {
+    const url = `${baseUrl.replace(/\/+$/, '')}/api/v4${apiPath}`;
+    const res = await fetch(url, {
+      headers: this.token ? { 'PRIVATE-TOKEN': this.token } : {},
+    });
+    if (!res.ok) {
+      throw new Error(`GitLab API returned ${res.status} for ${apiPath}`);
+    }
+    return (raw ? await res.text() : await res.json()) as T;
+  }
+
   private mapMr(body: any): GitlabMrInfo {
     const assignees = Array.isArray(body.assignees)
       ? body.assignees.map((assignee) => ({

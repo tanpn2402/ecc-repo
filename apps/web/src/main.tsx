@@ -17,6 +17,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GitlabActivities } from "./pages/GitlabActivities";
 import { useSocket } from "./hooks/use-socket";
 import { MergeRequests } from "./pages/MergeRequests";
+import { AnalysisPage } from "./features/analysis/AnalysisPage";
 
 const store = createStore();
 
@@ -67,6 +68,10 @@ const router = createBrowserRouter([
       {
         path: "/merge-requests",
         element: <MergeRequests />,
+      },
+      {
+        path: "/analysis/:workspaceId?/:sid?",
+        element: <AnalysisPage />,
       },
       {
         path: "*",

@@ -1,4 +1,5 @@
 import logger from '@/common/logger';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 const PERMISSION_MODES = new Set([
@@ -67,6 +68,64 @@ export interface AppConfig {
   teams: {
     enabled: boolean;
     webhookUrl: string;
+  };
+  analysis: AnalysisConfig;
+}
+
+/** Analysis tab (docs/epics/EPIC-001-analysis-tab.md). */
+export interface AnalysisConfig {
+  /** Folders a workspace / thread may point at (realpath, never '/'). */
+  roots: string[];
+  /** Cache + per-session files: <eccHome>/jira, <eccHome>/sessions. */
+  eccHome: string;
+  model: string;
+  maxTurns: number;
+  maxBudgetUsd: number | null;
+  /** Live Claude processes kept open at once (each is a few hundred MB). */
+  maxLive: number;
+  idleMinutes: number;
+  /** Scripted fake SDK instead of Claude (tests, demos). */
+  fake: boolean;
+  /** Serve /api/analysis, /api/fs and the /analysis socket to non-local clients. */
+  allowRemote: boolean;
+  /** Jira project keys auto-fetched when they appear in a chat message. */
+  jiraKeyPrefixes: string[];
+}
+
+function expandHome(p: string): string {
+  return p === '~' || p.startsWith('~/') ? path.join(os.homedir(), p.slice(1)) : p;
+}
+
+function parseList(raw: string | undefined, fallback: string[]): string[] {
+  const list = String(raw ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return list.length ? list : fallback;
+}
+
+function parseAnalysisConfig(env: NodeJS.ProcessEnv): AnalysisConfig {
+  const roots = parseList(env.ANALYSIS_ROOTS, ['~', '/data']).map((r) =>
+    path.resolve(expandHome(r)),
+  );
+  if (roots.some((r) => r === path.parse(r).root)) {
+    throw new Error('ANALYSIS_ROOTS must not contain the filesystem root');
+  }
+  const budget = Number(env.ANALYSIS_MAX_BUDGET_USD || 0);
+  return {
+    roots,
+    eccHome: path.resolve(expandHome(env.ECC_HOME || '~/.ecc')),
+    model: env.ANALYSIS_MODEL || '',
+    maxTurns: Number(env.ANALYSIS_MAX_TURNS || 60),
+    maxBudgetUsd: budget > 0 ? budget : null,
+    maxLive: Math.max(1, Number(env.ANALYSIS_MAX_LIVE || 2)),
+    idleMinutes: Math.max(1, Number(env.ANALYSIS_IDLE_MINUTES || 15)),
+    fake: env.ANALYSIS_FAKE === '1',
+    allowRemote: String(env.ANALYSIS_ALLOW_REMOTE ?? '').toLowerCase() === 'true',
+    jiraKeyPrefixes: parseList(
+      env.ANALYSIS_JIRA_PREFIXES,
+      [env.JIRA_PROJECT || 'CORE'],
+    ).map((s) => s.toUpperCase()),
   };
 }
 
@@ -337,6 +396,7 @@ function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     ops: {
       projects: parseOpsGroups(env.OPS_PROJECTS),
     },
+    analysis: parseAnalysisConfig(env),
   };
 }
 
@@ -348,4 +408,5 @@ export {
   parseReviewSkills,
   parseGitlabActivityUsers,
   parseGitlabActivityTypes,
+  parseAnalysisConfig,
 };

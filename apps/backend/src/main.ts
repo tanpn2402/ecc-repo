@@ -5,7 +5,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { WsAdapter } from '@nestjs/platform-ws';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { loadConfig } from './config/configuration';
 import { validateStartupConfig } from './config/config.validation';
 import { AppModule } from './app.module';
@@ -68,13 +68,13 @@ async function bootstrap() {
     },
   );
 
-  // Keeps the WebSocket transport as plain `ws` (mounted on the shared HTTP
-  // server at /ws via MrGateway) instead of Nest's socket.io default.
-  app.useWebSocketAdapter(new WsAdapter(app));
+  // Socket.IO on the shared HTTP server (default path /socket.io). Gateways:
+  // RealtimeGateway (default namespace) and AnalysisGateway (/analysis).
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   logger.info('Initialized WebSocket adapter', {
-    path: '/ws',
-    transport: 'ws',
+    path: '/socket.io',
+    transport: 'socket.io',
   });
 
   // Serves apps/webapps/dist if a production build exists (same check as

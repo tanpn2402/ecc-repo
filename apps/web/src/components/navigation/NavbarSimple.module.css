@@ -17,6 +17,13 @@
 
 .link {
   display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
   align-items: center;
   width: 100%;
   padding: 10px 12px;
@@ -36,16 +43,32 @@
   background-color: var(--mantine-color-gray-light);
 }
 
-.active {
+.link[aria-current="page"] {
   background-color: var(--mantine-primary-color-light);
   color: var(--mantine-color-text);
   font-weight: 600;
 }
 
 .linkIcon {
+  flex-shrink: 0;
   width: 20px;
   height: 20px;
   margin-right: var(--mantine-spacing-sm);
+}
+
+/* Icon-only rail: labels hide, icons centre in the 64px width. */
+.navbar[data-collapsed] .link {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.navbar[data-collapsed] .linkIcon {
+  margin-right: 0;
+}
+
+.navbar[data-collapsed] .label {
+  display: none;
 }
 
 .footer {

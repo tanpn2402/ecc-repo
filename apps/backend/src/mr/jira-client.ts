@@ -149,6 +149,29 @@ export class JiraClient {
     );
   }
 
+  /** GET a Jira REST path (e.g. `/rest/api/3/issue/CORE-1`) as JSON. Throws on non-2xx. */
+  async getJson<T = any>(apiPath: string): Promise<T> {
+    const res = await fetch(`${this.baseUrl}${apiPath}`, {
+      headers: { ...this._authHeader(), Accept: 'application/json' },
+    });
+    if (!res.ok) {
+      const err = new Error(`Jira API returned ${res.status} for ${apiPath}`) as Error & { status?: number };
+      err.status = res.status;
+      throw err;
+    }
+    return (await res.json()) as T;
+  }
+
+  /** Downloads an authenticated Jira URL (attachment content). Throws on non-2xx. */
+  async download(url: string): Promise<Buffer> {
+    if (!url.startsWith(this.baseUrl + '/')) {
+      throw new Error(`Refusing to download outside ${this.baseUrl}: ${url}`);
+    }
+    const res = await fetch(url, { headers: this._authHeader() });
+    if (!res.ok) throw new Error(`Jira returned ${res.status} for ${url}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
   /**
    * Fetches remote links attached to one issue (BACKEND_SPEC.md §3/§4) —
    * used to find candidate GitLab MR URLs. Returns every link's URL/title

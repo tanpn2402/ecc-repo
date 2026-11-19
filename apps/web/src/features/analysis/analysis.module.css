@@ -1,0 +1,478 @@
+/* Analysis tab: 3 columns (threads | chat | context) filling the main area. */
+.page {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  height: calc(100dvh - var(--app-shell-header-height, 60px));
+  min-height: 0;
+}
+
+.sidebar,
+.context {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--mantine-color-dark-6);
+}
+
+.context {
+  border-right: none;
+  border-left: 1px solid var(--mantine-color-dark-6);
+}
+
+.center {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 75em) {
+  .page {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .context {
+    display: none;
+  }
+}
+
+@media (max-width: 48em) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Mantine wraps ScrollArea content in display:table, which grows with a long unbroken title. */
+.threadList > div {
+  display: block !important;
+}
+
+.threadRow {
+  min-width: 0;
+}
+
+.threadItem {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-text);
+}
+
+.threadItem:hover {
+  background: var(--mantine-color-dark-6);
+}
+
+.threadItem[data-active] {
+  background: var(--mantine-color-dark-5);
+}
+
+/* The gear shows on hover, on the active row and while its menu is open. */
+.threadGear {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.threadRow:hover .threadGear,
+.threadRow[data-open] .threadGear,
+.threadRow:has([data-active]) .threadGear,
+.threadGear:focus-visible,
+.threadGear[data-copied] {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .threadGear {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------- thread */
+
+.threadRoot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg) 0;
+}
+
+.messages {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.userMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.userBubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-dark-5);
+  font-size: var(--mantine-font-size-sm);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.assistantMessage {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.assistantBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--mantine-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mantine-color-myColor-light);
+  color: var(--mantine-color-myColor-4);
+}
+
+.scrollFooter {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 8px;
+  pointer-events: none;
+}
+
+.scrollFooter > * {
+  pointer-events: auto;
+}
+
+.scrollFooter button:disabled {
+  visibility: hidden;
+}
+
+.composerWrap {
+  border-top: 1px solid var(--mantine-color-dark-6);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-lg);
+}
+
+.composer {
+  max-width: 860px;
+  margin: 0 auto;
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-dark-7);
+}
+
+.composer:focus-within {
+  border-color: var(--mantine-color-myColor-7);
+}
+
+.composerInput {
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  max-height: 260px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--mantine-color-text);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  padding: 10px 12px;
+}
+
+.attachments:empty {
+  display: none;
+}
+
+.attachmentChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 220px;
+  padding: 2px 8px;
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-xs);
+}
+
+/* ---------------------------------------------------------------- parts */
+
+.toolRow {
+  background: var(--mantine-color-dark-7);
+  overflow: hidden;
+}
+
+.toolRow[data-error] {
+  border-color: var(--mantine-color-red-9);
+}
+
+.toolHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+}
+
+.toolBody {
+  border-top: 1px solid var(--mantine-color-dark-5);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--mantine-color-dimmed);
+  transition: transform 120ms ease;
+}
+
+.chevron[data-open] {
+  transform: rotate(90deg);
+}
+
+.pre {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 6px 8px;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.card {
+  background: var(--mantine-color-dark-7);
+}
+
+.card[data-pending] {
+  border-color: var(--mantine-color-yellow-7);
+}
+
+.card[data-question] {
+  border-color: var(--mantine-color-blue-7);
+}
+
+.jiraChip {
+  background: var(--mantine-color-dark-7);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.noShrink {
+  flex-shrink: 0;
+}
+
+.reasoning {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.reasoning summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---------------------------------------------------------------- markdown */
+
+.md {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md > :last-child {
+  margin-bottom: 0;
+}
+
+.md p,
+.md ul,
+.md ol,
+.md pre,
+.md table,
+.md blockquote {
+  margin: 0 0 0.6em;
+}
+
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  margin: 0.9em 0 0.4em;
+  line-height: 1.3;
+}
+
+.md h1 {
+  font-size: 1.3em;
+}
+
+.md h2 {
+  font-size: 1.15em;
+}
+
+.md h3 {
+  font-size: 1.05em;
+}
+
+.md code {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 0.88em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--mantine-color-dark-6);
+}
+
+.md pre {
+  padding: 10px 12px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-dark-9);
+  overflow-x: auto;
+}
+
+/* Code block header (language + copy) sits flush on top of its <pre>. */
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px 2px 12px;
+  margin-top: 0.2em;
+  border-top-left-radius: var(--mantine-radius-sm);
+  border-top-right-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-dark-7);
+  border-bottom: 1px solid var(--mantine-color-dark-5);
+}
+
+.codeHeader + pre {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.md pre code {
+  padding: 0;
+  background: none;
+}
+
+.md table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+.md th,
+.md td {
+  border: 1px solid var(--mantine-color-dark-4);
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.md blockquote {
+  padding-left: 10px;
+  border-left: 3px solid var(--mantine-color-dark-4);
+  color: var(--mantine-color-dimmed);
+}
+
+.md a {
+  color: var(--mantine-color-blue-4);
+}
+
+.md img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+
+.dirRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.dirRow:hover {
+  background: var(--mantine-color-dark-6);
+}
+
+/* ---------------------------------------------------------------- Jira keys in the chat */
+
+.jiraKey {
+  font: inherit;
+  font-weight: 600;
+  vertical-align: baseline;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.jiraKey code {
+  color: inherit;
+}
+
+.jiraPreviewDesc {
+  border-top: 1px solid var(--mantine-color-dark-4);
+  padding-top: 6px;
+  font-size: var(--mantine-font-size-xs);
+}
+
+/* ---------------------------------------------------------------- right column tabs */
+
+.contextTabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.contextTabPanel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* A user message the Attachments tab jumped to. */
+.flash .userBubble,
+.flash.userMessage > :last-child {
+  animation: flash 1.6s ease-out;
+}
+
+@keyframes flash {
+  0%,
+  30% {
+    box-shadow: 0 0 0 2px var(--mantine-color-blue-5);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}

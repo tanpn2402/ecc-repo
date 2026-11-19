@@ -1,7 +1,9 @@
 import {
+  Center,
   Group,
   Paper,
   Progress,
+  RingProgress,
   Skeleton,
   Stack,
   Text,
@@ -46,8 +48,72 @@ function formatResetTime(value: string) {
   return `${days}d`;
 }
 
-export function ClaudeUsage() {
+/** Collapsed navbar: one ring for the 5-hour window, both windows in the tooltip. */
+function CompactUsage({
+  usage,
+  isLoading,
+  isError,
+}: {
+  usage: ClaudeUsage | undefined;
+  isLoading: boolean;
+  isError: boolean;
+}) {
+  const rows = [
+    { label: "5h", value: usage?.fiveHour },
+    { label: "7d", value: usage?.sevenDay },
+  ].filter((r) => r.value) as { label: string; value: ClaudeRateLimit }[];
+  const main = rows[0]?.value;
+  const pct = main ? Math.min(100, Math.max(0, main.utilization)) : 0;
+  const label = isLoading ? (
+    "Loading Claude usage…"
+  ) : isError || !rows.length ? (
+    "Claude usage unavailable"
+  ) : (
+    <Stack gap={2}>
+      <Text size="xs" fw={600}>
+        Claude usage
+      </Text>
+      {rows.map((r) => (
+        <Text key={r.label} size="xs">
+          {r.label}: {Math.round(r.value.utilization)}% · resets in{" "}
+          {formatResetTime(r.value.resetsAt)}
+        </Text>
+      ))}
+    </Stack>
+  );
+
+  return (
+    <Tooltip label={label} position="right" withArrow>
+      <Center>
+        <RingProgress
+          size={40}
+          thickness={4}
+          roundCaps
+          sections={[{ value: pct, color: pct >= 80 ? "red" : "blue" }]}
+          label={
+            <Text size="9px" ta="center" fw={600}>
+              {main ? `${Math.round(pct)}%` : "–"}
+            </Text>
+          }
+          aria-label="Claude usage"
+        />
+      </Center>
+    </Tooltip>
+  );
+}
+
+export function ClaudeUsage({ compact = false }: { compact?: boolean }) {
   const { data: usage, isLoading, isError } = useClaudeUsage();
+
+  if (compact) {
+    return (
+      <CompactUsage
+        usage={usage as ClaudeUsage | undefined}
+        isLoading={isLoading}
+        isError={isError}
+      />
+    );
+  }
 
   return (
     <Paper p="xs" radius="md" withBorder>
